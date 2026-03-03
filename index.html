@@ -1257,7 +1257,23 @@ function saveApiKey() {
   NEXAKEY = val;
   sessionStorage.setItem('nexa_api_key', val);
   document.getElementById('keyModal').style.display = 'none';
-  addMessage('nexa', 'API key accepted. System fully operational.\n\nBefore we proceed, I need three data points:\n\n<span class="tag">01</span> Current trading account size\n<span class="tag">02</span> Primary debt target + balance\n<span class="tag">03</span> Today\'s focus domain\n\nOperate from data. Not assumption.');
+  // Use direct HTML injection for welcome message
+  const container = document.getElementById('chatMessages');
+  const msg = document.createElement('div');
+  msg.className = 'msg nexa';
+  msg.innerHTML = `
+    <div class="msg-label">Nexa OS</div>
+    <div class="msg-bubble">
+      API key accepted. System fully operational.<br><br>
+      Before we proceed, I need three data points:<br><br>
+      <span class="tag">01</span> Current trading account size<br>
+      <span class="tag">02</span> Primary debt target + balance<br>
+      <span class="tag">03</span> Today's focus domain<br><br>
+      Operate from data. Not assumption.
+    </div>
+  `;
+  container.appendChild(msg);
+  container.scrollTop = container.scrollHeight;
 }
 
 // Chat
