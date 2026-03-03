@@ -1172,13 +1172,9 @@ Response format: Analysis → Risks → Optimization → Next Steps. Keep it tig
 function switchPanel(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  // Map old names to new panel IDs
-  const map = {'chat': 'chat', 'priority': 'status', 'research': 'research', 'status': 'status'};
-  const panelId = map[name] || name;
-  const panel = document.getElementById('panel-' + panelId);
+  const panel = document.getElementById('panel-' + name);
   if (panel) panel.classList.add('active');
   if (btn) btn.classList.add('active');
-  else if (event && event.currentTarget) event.currentTarget.classList.add('active');
 }
 
 // Research mode switching
@@ -1240,7 +1236,7 @@ function updateContext() {
   }
 
   // Switch to chat and confirm
-  switchPanel('chat', null);
+  switchPanel('chat', document.querySelector('.nav-btn'));
   addMessage('nexa', `Context updated. Operating on current data.\n\nAccount: ${context.accountSize || 'not set'}\nDebt target: ${context.debtBalance || 'not set'}\nIncome est.: ${context.weeklyIncome || 'not set'}\nTrades today: ${context.tradesToday}/2\n\nPriority domain is locked. Proceed with discipline.`);
 }
 
