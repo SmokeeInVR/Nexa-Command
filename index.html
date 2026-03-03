@@ -3,24 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>ALFRED OS</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<title>NEXA OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #050810;
-    --surface: #090d1a;
-    --surface2: #0d1225;
-    --border: #1a2240;
-    --accent: #00d4ff;
-    --accent2: #0066ff;
-    --accent3: #ff6b00;
-    --warn: #ff3a3a;
-    --success: #00ff88;
-    --text: #c8d8f0;
-    --text-dim: #4a6080;
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #161616;
+    --surface3: #1c1c1c;
+    --border: #2a2a2a;
+    --border-gold: rgba(212,165,62,0.25);
+    --gold: #D4A53E;
+    --gold-light: #F0C060;
+    --gold-dim: rgba(212,165,62,0.5);
+    --gold-glow: 0 0 20px rgba(212,165,62,0.25);
+    --text: #c8c8c8;
+    --text-dim: #555;
     --text-bright: #ffffff;
-    --glow: 0 0 20px rgba(0,212,255,0.3);
-    --glow-warm: 0 0 20px rgba(255,107,0,0.3);
+    --warn: #e05555;
+    --success: #5cb85c;
+    --info: #5b9bd5;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -31,18 +33,17 @@
     font-family: 'Rajdhani', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
-    position: relative;
   }
 
-  /* Ambient grid background */
+  /* Subtle texture */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background-image: 
-      linear-gradient(rgba(0,100,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,100,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
+    background-image:
+      linear-gradient(rgba(212,165,62,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(212,165,62,0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
     pointer-events: none;
     z-index: 0;
   }
@@ -50,12 +51,9 @@
   body::after {
     content: '';
     position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(ellipse at 60% 20%, rgba(0,100,255,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 20% 80%, rgba(0,212,255,0.04) 0%, transparent 40%);
+    top: 0; left: 0; right: 0;
+    height: 300px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(212,165,62,0.06) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -70,11 +68,11 @@
     flex-direction: column;
   }
 
-  /* HEADER */
+  /* ── HEADER ── */
   .header {
-    padding: 16px 20px 12px;
+    padding: 14px 18px 12px;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(9,13,26,0.98) 0%, rgba(9,13,26,0.92) 100%);
+    background: rgba(10,10,10,0.97);
     backdrop-filter: blur(20px);
     position: sticky;
     top: 0;
@@ -91,62 +89,70 @@
   .logo {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 11px;
   }
 
   .logo-mark {
-    width: 36px;
-    height: 36px;
-    border: 1.5px solid var(--accent);
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, #1a1500, #2a2000);
+    border: 1.5px solid var(--gold);
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    box-shadow: var(--glow), inset 0 0 10px rgba(0,212,255,0.1);
-    animation: pulse-border 3s ease-in-out infinite;
+    box-shadow: var(--gold-glow), inset 0 0 12px rgba(212,165,62,0.08);
+    animation: goldPulse 4s ease-in-out infinite;
+    flex-shrink: 0;
   }
 
-  @keyframes pulse-border {
-    0%, 100% { box-shadow: var(--glow), inset 0 0 10px rgba(0,212,255,0.1); }
-    50% { box-shadow: 0 0 30px rgba(0,212,255,0.5), inset 0 0 15px rgba(0,212,255,0.2); }
+  @keyframes goldPulse {
+    0%, 100% { box-shadow: var(--gold-glow), inset 0 0 12px rgba(212,165,62,0.08); }
+    50% { box-shadow: 0 0 30px rgba(212,165,62,0.4), inset 0 0 18px rgba(212,165,62,0.15); }
   }
 
-  .logo-mark svg { width: 18px; height: 18px; }
+  .logo-mark svg { width: 20px; height: 20px; }
 
-  .logo-text {
-    font-family: 'Orbitron', monospace;
-    font-size: 16px;
-    font-weight: 900;
-    letter-spacing: 4px;
+  .logo-text-block { display: flex; flex-direction: column; }
+
+  .logo-name {
+    font-family: 'Cinzel', serif;
+    font-size: 17px;
+    font-weight: 700;
     color: var(--text-bright);
+    letter-spacing: 4px;
+    line-height: 1;
   }
+
+  .logo-name span { color: var(--gold); }
 
   .logo-sub {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    color: var(--accent);
+    font-size: 8px;
+    color: var(--gold-dim);
     letter-spacing: 3px;
-    margin-top: 1px;
+    margin-top: 3px;
+    text-transform: uppercase;
   }
 
-  .status-dot {
+  .status-indicator {
     display: flex;
     align-items: center;
     gap: 6px;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     color: var(--success);
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
   }
 
-  .dot {
+  .status-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
     background: var(--success);
-    animation: blink 2s ease-in-out infinite;
     box-shadow: 0 0 8px var(--success);
+    animation: blink 2.5s ease-in-out infinite;
   }
 
   @keyframes blink {
@@ -154,14 +160,14 @@
     50% { opacity: 0.3; }
   }
 
-  /* NAV TABS */
+  /* ── NAV ── */
   .nav {
     display: flex;
     gap: 0;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 3px;
-    border: 1px solid var(--border);
   }
 
   .nav-btn {
@@ -181,122 +187,161 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
   }
 
-  .nav-btn svg { width: 14px; height: 14px; opacity: 0.6; transition: all 0.2s; }
+  .nav-btn svg { width: 14px; height: 14px; opacity: 0.5; transition: all 0.2s; }
 
   .nav-btn.active {
-    background: rgba(0,212,255,0.08);
-    color: var(--accent);
-    border: 1px solid rgba(0,212,255,0.2);
-    box-shadow: 0 0 12px rgba(0,212,255,0.1);
+    background: linear-gradient(135deg, rgba(212,165,62,0.12), rgba(212,165,62,0.06));
+    color: var(--gold);
+    border: 1px solid var(--border-gold);
+    box-shadow: 0 0 12px rgba(212,165,62,0.1);
   }
 
-  .nav-btn.active svg { opacity: 1; }
+  .nav-btn.active svg { opacity: 1; color: var(--gold); }
 
-  /* PANELS */
+  /* ── PANELS ── */
   .panel { display: none; flex: 1; flex-direction: column; }
   .panel.active { display: flex; }
 
-  /* ===== ALFRED CHAT PANEL ===== */
+  /* ══════════════════════════════
+     CHAT PANEL
+  ══════════════════════════════ */
   .chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 16px 20px;
+    padding: 16px 18px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    min-height: 0;
-    max-height: calc(100vh - 220px);
+    gap: 14px;
+    max-height: calc(100vh - 230px);
   }
 
-  .chat-messages::-webkit-scrollbar { width: 3px; }
-  .chat-messages::-webkit-scrollbar-track { background: transparent; }
-  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .chat-messages::-webkit-scrollbar { width: 2px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  .msg {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    animation: fadeUp 0.3s ease;
-  }
+  .msg { display: flex; flex-direction: column; gap: 4px; animation: fadeUp 0.25s ease; }
 
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .msg.alfred { align-items: flex-start; }
+  .msg.nexa { align-items: flex-start; }
   .msg.user { align-items: flex-end; }
 
   .msg-label {
     font-family: 'Share Tech Mono', monospace;
     font-size: 9px;
     letter-spacing: 2px;
-    color: var(--text-dim);
     text-transform: uppercase;
     padding: 0 4px;
+    color: var(--text-dim);
   }
 
-  .msg.alfred .msg-label { color: var(--accent); }
+  .msg.nexa .msg-label { color: var(--gold-dim); }
 
   .msg-bubble {
-    max-width: 88%;
-    padding: 10px 14px;
-    border-radius: 12px;
+    max-width: 90%;
+    padding: 11px 14px;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.55;
     font-weight: 400;
   }
 
-  .msg.alfred .msg-bubble {
+  .msg.nexa .msg-bubble {
     background: var(--surface2);
     border: 1px solid var(--border);
-    border-left: 2px solid var(--accent);
+    border-left: 2px solid var(--gold);
     color: var(--text);
-    border-radius: 4px 12px 12px 12px;
+    border-radius: 2px 10px 10px 10px;
   }
 
   .msg.user .msg-bubble {
-    background: rgba(0,102,255,0.15);
-    border: 1px solid rgba(0,102,255,0.3);
+    background: linear-gradient(135deg, rgba(212,165,62,0.12), rgba(212,165,62,0.06));
+    border: 1px solid var(--border-gold);
     color: var(--text-bright);
-    border-radius: 12px 4px 12px 12px;
-  }
-
-  .msg-bubble .flag {
-    color: var(--warn);
-    font-weight: 700;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
+    border-radius: 10px 2px 10px 10px;
   }
 
   .msg-bubble .tag {
     display: inline-block;
-    background: rgba(0,212,255,0.1);
-    border: 1px solid rgba(0,212,255,0.2);
-    color: var(--accent);
+    background: rgba(212,165,62,0.1);
+    border: 1px solid rgba(212,165,62,0.25);
+    color: var(--gold);
     font-family: 'Share Tech Mono', monospace;
     font-size: 10px;
-    padding: 2px 6px;
+    padding: 1px 6px;
     border-radius: 3px;
-    margin: 2px 2px 2px 0;
+    margin: 2px 3px 2px 0;
     letter-spacing: 1px;
   }
 
-  /* Chat input */
-  .chat-input-area {
-    padding: 12px 20px 20px;
-    border-top: 1px solid var(--border);
-    background: rgba(9,13,26,0.95);
+  /* Typing indicator */
+  .typing {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--gold);
+    border-radius: 2px 10px 10px 10px;
+    width: fit-content;
   }
 
-  .input-row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
+  .typing span {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: typeDot 1.2s ease-in-out infinite;
+    opacity: 0.4;
   }
+
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typeDot {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  /* Chat input area */
+  .chat-input-area {
+    padding: 10px 18px 18px;
+    border-top: 1px solid var(--border);
+    background: rgba(10,10,10,0.95);
+  }
+
+  .quick-prompts {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .qp-btn {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .qp-btn:active, .qp-btn:hover {
+    border-color: var(--border-gold);
+    color: var(--gold);
+    background: rgba(212,165,62,0.05);
+  }
+
+  .input-row { display: flex; gap: 10px; align-items: flex-end; }
 
   .chat-input {
     flex: 1;
@@ -307,7 +352,6 @@
     color: var(--text-bright);
     font-family: 'Rajdhani', sans-serif;
     font-size: 15px;
-    font-weight: 400;
     resize: none;
     min-height: 44px;
     max-height: 100px;
@@ -316,14 +360,13 @@
     transition: border-color 0.2s;
   }
 
-  .chat-input:focus { border-color: rgba(0,212,255,0.4); box-shadow: 0 0 10px rgba(0,212,255,0.1); }
+  .chat-input:focus { border-color: var(--border-gold); box-shadow: 0 0 10px rgba(212,165,62,0.08); }
   .chat-input::placeholder { color: var(--text-dim); }
 
   .send-btn {
-    width: 44px;
-    height: 44px;
-    background: rgba(0,212,255,0.1);
-    border: 1px solid rgba(0,212,255,0.3);
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, rgba(212,165,62,0.15), rgba(212,165,62,0.08));
+    border: 1px solid var(--border-gold);
     border-radius: 10px;
     cursor: pointer;
     display: flex;
@@ -333,47 +376,25 @@
     flex-shrink: 0;
   }
 
-  .send-btn:active { background: rgba(0,212,255,0.25); transform: scale(0.95); }
-  .send-btn svg { width: 18px; height: 18px; color: var(--accent); }
+  .send-btn:active { background: rgba(212,165,62,0.25); transform: scale(0.95); }
+  .send-btn svg { width: 18px; height: 18px; color: var(--gold); }
 
-  /* Quick prompts */
-  .quick-prompts {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
-
-  .qp-btn {
-    background: rgba(0,0,0,0.4);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 5px 10px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-
-  .qp-btn:active { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.05); }
-
-  /* ===== PRIORITY PANEL ===== */
-  .priority-panel {
-    padding: 16px 20px;
+  /* ══════════════════════════════
+     STATUS PANEL
+  ══════════════════════════════ */
+  .status-panel {
+    padding: 16px 18px;
     overflow-y: auto;
     flex: 1;
   }
 
   .section-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 3px;
     color: var(--text-dim);
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -386,91 +407,22 @@
     background: var(--border);
   }
 
-  .priority-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin-bottom: 8px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.2s;
-  }
-
-  .priority-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--accent);
-    opacity: 0.4;
-  }
-
-  .priority-item.active::before { opacity: 1; background: var(--accent3); }
-  .priority-item.active { border-color: rgba(255,107,0,0.2); background: rgba(255,107,0,0.04); }
-
-  .priority-num {
-    font-family: 'Orbitron', monospace;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-dim);
-    width: 28px;
-    flex-shrink: 0;
-    text-align: center;
-  }
-
-  .priority-item.active .priority-num { color: var(--accent3); }
-
-  .priority-info { flex: 1; }
-
-  .priority-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-bright);
-    letter-spacing: 0.5px;
-  }
-
-  .priority-sub {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-top: 2px;
-    letter-spacing: 0.5px;
-  }
-
-  .priority-status {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    letter-spacing: 1px;
-  }
-
-  .status-active { background: rgba(255,107,0,0.15); color: var(--accent3); border: 1px solid rgba(255,107,0,0.3); }
-  .status-locked { background: rgba(255,58,58,0.1); color: var(--warn); border: 1px solid rgba(255,58,58,0.2); }
-  .status-pending { background: rgba(74,96,128,0.2); color: var(--text-dim); border: 1px solid var(--border); }
-
-  /* Trading Status Card */
-  .status-card {
+  /* Stat cards */
+  .stat-card {
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 14px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
-  .status-card-title {
+  .stat-card-title {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 2px;
-    color: var(--accent);
-    margin-bottom: 12px;
+    color: var(--gold-dim);
     text-transform: uppercase;
+    margin-bottom: 12px;
   }
 
   .stat-grid {
@@ -495,31 +447,31 @@
   }
 
   .stat-value {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Cinzel', serif;
     font-size: 16px;
     font-weight: 700;
     color: var(--text-bright);
     margin-top: 3px;
   }
 
+  .stat-value.gold { color: var(--gold); }
   .stat-value.warn { color: var(--warn); }
   .stat-value.ok { color: var(--success); }
-  .stat-value.accent { color: var(--accent); }
 
-  /* Context update form */
+  /* Context form */
   .context-form {
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 14px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .form-row { margin-bottom: 10px; }
 
   .form-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-dim);
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -540,15 +492,15 @@
     transition: border-color 0.2s;
   }
 
-  .form-input:focus { border-color: rgba(0,212,255,0.4); }
+  .form-input:focus { border-color: var(--border-gold); }
 
-  .update-btn {
+  .gold-btn {
     width: 100%;
     padding: 11px;
-    background: rgba(0,212,255,0.08);
-    border: 1px solid rgba(0,212,255,0.25);
+    background: linear-gradient(135deg, rgba(212,165,62,0.12), rgba(212,165,62,0.06));
+    border: 1px solid var(--border-gold);
     border-radius: 8px;
-    color: var(--accent);
+    color: var(--gold);
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: 13px;
@@ -559,16 +511,87 @@
     margin-top: 4px;
   }
 
-  .update-btn:active { background: rgba(0,212,255,0.15); }
+  .gold-btn:active { background: rgba(212,165,62,0.2); }
 
-  /* ===== RESEARCH PANEL ===== */
+  /* Priority stack */
+  .priority-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 13px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 7px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .priority-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--border);
+  }
+
+  .priority-item.active-priority { border-color: var(--border-gold); background: rgba(212,165,62,0.04); }
+  .priority-item.active-priority::before { background: var(--gold); }
+
+  .priority-num {
+    font-family: 'Cinzel', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-dim);
+    width: 26px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+
+  .priority-item.active-priority .priority-num { color: var(--gold); }
+
+  .priority-info { flex: 1; }
+
+  .priority-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-bright);
+    letter-spacing: 0.3px;
+  }
+
+  .priority-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    letter-spacing: 0.3px;
+  }
+
+  .priority-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .badge-active { background: rgba(212,165,62,0.12); color: var(--gold); border: 1px solid var(--border-gold); }
+  .badge-locked { background: rgba(224,85,85,0.1); color: var(--warn); border: 1px solid rgba(224,85,85,0.2); }
+  .badge-ongoing { background: rgba(85,85,85,0.2); color: var(--text-dim); border: 1px solid var(--border); }
+  .badge-rebuild { background: rgba(91,155,213,0.1); color: var(--info); border: 1px solid rgba(91,155,213,0.2); }
+
+  /* ══════════════════════════════
+     RESEARCH PANEL
+  ══════════════════════════════ */
   .research-panel {
-    padding: 16px 20px;
+    padding: 16px 18px;
     overflow-y: auto;
     flex: 1;
   }
 
-  .research-mode-select {
+  .mode-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
@@ -586,9 +609,9 @@
   }
 
   .mode-card.selected {
-    border-color: rgba(0,212,255,0.4);
-    background: rgba(0,212,255,0.06);
-    box-shadow: 0 0 16px rgba(0,212,255,0.1);
+    border-color: var(--border-gold);
+    background: rgba(212,165,62,0.06);
+    box-shadow: 0 0 14px rgba(212,165,62,0.1);
   }
 
   .mode-icon { font-size: 22px; margin-bottom: 6px; }
@@ -606,23 +629,22 @@
     font-size: 9px;
     color: var(--text-dim);
     margin-top: 3px;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
   }
 
-  /* Checklist */
   .checklist-card {
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 14px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .checklist-title {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 2px;
-    color: var(--accent);
+    color: var(--gold-dim);
     margin-bottom: 12px;
     text-transform: uppercase;
   }
@@ -632,15 +654,15 @@
     align-items: flex-start;
     gap: 10px;
     padding: 8px 0;
-    border-bottom: 1px solid rgba(26,34,64,0.5);
+    border-bottom: 1px solid rgba(42,42,42,0.6);
   }
 
   .checklist-item:last-child { border-bottom: none; }
 
   .check-num {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Cinzel', serif;
     font-size: 11px;
-    color: var(--accent);
+    color: var(--gold);
     width: 20px;
     flex-shrink: 0;
     margin-top: 1px;
@@ -658,12 +680,11 @@
     font-size: 10px;
     color: var(--text-dim);
     margin-top: 3px;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
   }
 
   .check-box {
-    width: 18px;
-    height: 18px;
+    width: 18px; height: 18px;
     border: 1px solid var(--border);
     border-radius: 4px;
     cursor: pointer;
@@ -676,23 +697,18 @@
   }
 
   .check-box.checked {
-    background: rgba(0,212,255,0.15);
-    border-color: var(--accent);
+    background: rgba(212,165,62,0.15);
+    border-color: var(--gold);
   }
 
-  .check-box.checked::after {
-    content: '✓';
-    color: var(--accent);
-    font-size: 11px;
-  }
+  .check-box.checked::after { content: '✓'; color: var(--gold); font-size: 11px; }
 
-  /* Analysis input */
   .analysis-area {
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 14px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .analysis-textarea {
@@ -711,192 +727,121 @@
     margin-bottom: 8px;
   }
 
-  .analysis-textarea:focus { border-color: rgba(0,212,255,0.4); }
+  .analysis-textarea:focus { border-color: var(--border-gold); }
 
-  .analyze-btn {
-    width: 100%;
-    padding: 11px;
-    background: rgba(255,107,0,0.08);
-    border: 1px solid rgba(255,107,0,0.25);
-    border-radius: 8px;
-    color: var(--accent3);
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .analyze-btn:active { background: rgba(255,107,0,0.15); }
-
-  /* Analysis result */
   .analysis-result {
     background: var(--surface2);
     border: 1px solid var(--border);
-    border-left: 2px solid var(--accent3);
+    border-left: 2px solid var(--gold);
     border-radius: 10px;
     padding: 14px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     display: none;
   }
-
-  .result-section {
-    margin-bottom: 12px;
-  }
-
-  .result-section:last-child { margin-bottom: 0; }
 
   .result-label {
     font-family: 'Share Tech Mono', monospace;
     font-size: 9px;
     letter-spacing: 2px;
-    color: var(--accent3);
+    color: var(--gold-dim);
     text-transform: uppercase;
     margin-bottom: 6px;
   }
 
-  .result-text {
-    font-size: 13px;
-    color: var(--text);
-    line-height: 1.5;
-  }
+  .result-text { font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 10px; }
+  .result-text:last-child { margin-bottom: 0; }
 
   .verdict {
     display: inline-block;
     padding: 4px 12px;
     border-radius: 4px;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 2px;
     font-weight: 700;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
-  .verdict.pursue { background: rgba(0,255,136,0.1); color: var(--success); border: 1px solid rgba(0,255,136,0.3); }
-  .verdict.skip { background: rgba(255,58,58,0.1); color: var(--warn); border: 1px solid rgba(255,58,58,0.3); }
-  .verdict.more-data { background: rgba(255,107,0,0.1); color: var(--accent3); border: 1px solid rgba(255,107,0,0.3); }
+  .verdict.pursue { background: rgba(92,184,92,0.1); color: var(--success); border: 1px solid rgba(92,184,92,0.3); }
+  .verdict.skip { background: rgba(224,85,85,0.1); color: var(--warn); border: 1px solid rgba(224,85,85,0.25); }
+  .verdict.more-data { background: rgba(212,165,62,0.1); color: var(--gold); border: 1px solid var(--border-gold); }
 
-  /* Scrollbar */
-  .priority-panel::-webkit-scrollbar,
-  .research-panel::-webkit-scrollbar { width: 3px; }
-  .priority-panel::-webkit-scrollbar-thumb,
-  .research-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  /* ── SCROLLBARS ── */
+  .status-panel::-webkit-scrollbar,
+  .research-panel::-webkit-scrollbar { width: 2px; }
+  .status-panel::-webkit-scrollbar-thumb,
+  .research-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  /* Typing indicator */
-  .typing {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    padding: 10px 14px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-left: 2px solid var(--accent);
-    border-radius: 4px 12px 12px 12px;
-    width: fit-content;
-  }
-
-  .typing span {
-    width: 5px;
-    height: 5px;
-    background: var(--accent);
-    border-radius: 50%;
-    animation: typingDot 1.2s ease-in-out infinite;
+  /* ── GOLD DIVIDER ── */
+  .gold-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin: 14px 0;
     opacity: 0.4;
-  }
-
-  .typing span:nth-child(2) { animation-delay: 0.2s; }
-  .typing span:nth-child(3) { animation-delay: 0.4s; }
-
-  @keyframes typingDot {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.2); }
-  }
-
-  .scan-line {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    animation: scan 4s linear infinite;
-    opacity: 0.3;
-    pointer-events: none;
-    z-index: 999;
-  }
-
-  @keyframes scan {
-    0% { transform: translateY(0); opacity: 0; }
-    5% { opacity: 0.3; }
-    95% { opacity: 0.3; }
-    100% { transform: translateY(100vh); opacity: 0; }
   }
 </style>
 </head>
 <body>
 
 <!-- API KEY MODAL -->
-<div id="keyModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px;">
-  <div style="background:#090d1a; border:1px solid #1a2240; border-top:2px solid #00d4ff; border-radius:12px; padding:24px; max-width:380px; width:100%;">
-    <div style="font-family:Orbitron,monospace; font-size:14px; font-weight:700; color:#fff; letter-spacing:3px; margin-bottom:6px;">NEXA COMMAND</div>
-    <div style="font-family:Share Tech Mono,monospace; font-size:10px; color:#00d4ff; letter-spacing:2px; margin-bottom:20px;">API AUTHORIZATION REQUIRED</div>
-    <div style="font-family:Rajdhani,sans-serif; font-size:14px; color:#c8d8f0; margin-bottom:16px; line-height:1.5;">Enter your Anthropic API key to activate Alfred. Stored in this session only.</div>
-    <input id="apiKeyInput" type="password" placeholder="sk-ant-api03-..." style="width:100%; background:rgba(0,0,0,0.4); border:1px solid #1a2240; border-radius:6px; padding:10px 12px; color:#fff; font-size:12px; outline:none; margin-bottom:8px; box-sizing:border-box;">
-    <div id="keyError" style="display:none; font-size:10px; color:#ff3a3a; margin-bottom:8px;">Invalid key format. Must start with sk-ant-</div>
-    <button onclick="saveApiKey()" style="width:100%; padding:12px; background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.3); border-radius:8px; color:#00d4ff; font-weight:700; font-size:13px; letter-spacing:2px; text-transform:uppercase; cursor:pointer;">ACTIVATE ALFRED</button>
-    <div style="font-size:9px; color:#4a6080; margin-top:12px; text-align:center;">Get your key at console.anthropic.com</div>
+<div id="keyModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:1000; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#111; border:1px solid #2a2a2a; border-top:2px solid #D4A53E; border-radius:12px; padding:26px; max-width:380px; width:100%;">
+    <div style="font-family:Cinzel,serif; font-size:18px; font-weight:700; color:#fff; letter-spacing:4px; margin-bottom:4px;">NEXA <span style='color:#D4A53E'>OS</span></div>
+    <div style="font-family:'Share Tech Mono',monospace; font-size:9px; color:rgba(212,165,62,0.5); letter-spacing:3px; margin-bottom:20px; text-transform:uppercase;">Authorization Required</div>
+    <div style="font-family:Rajdhani,sans-serif; font-size:14px; color:#c8c8c8; margin-bottom:18px; line-height:1.6;">Enter your Anthropic API key to activate the system. Stored in this browser session only — never sent anywhere except Anthropic's API.</div>
+    <input id="apiKeyInput" type="password" placeholder="sk-ant-api03-..." style="width:100%; background:rgba(0,0,0,0.5); border:1px solid #2a2a2a; border-radius:6px; padding:10px 12px; color:#fff; font-family:'Share Tech Mono',monospace; font-size:12px; outline:none; margin-bottom:8px; box-sizing:border-box; transition:border-color 0.2s;" onfocus="this.style.borderColor='rgba(212,165,62,0.4)'" onblur="this.style.borderColor='#2a2a2a'">
+    <div id="keyError" style="display:none; font-family:'Share Tech Mono',monospace; font-size:10px; color:#e05555; margin-bottom:8px; letter-spacing:1px;">⚠ Invalid key format</div>
+    <button onclick="saveApiKey()" style="width:100%; padding:12px; background:linear-gradient(135deg,rgba(212,165,62,0.15),rgba(212,165,62,0.07)); border:1px solid rgba(212,165,62,0.3); border-radius:8px; color:#D4A53E; font-family:Rajdhani,sans-serif; font-weight:700; font-size:13px; letter-spacing:3px; text-transform:uppercase; cursor:pointer;">ACTIVATE SYSTEM</button>
+    <div style="font-family:'Share Tech Mono',monospace; font-size:9px; color:#444; margin-top:14px; text-align:center; letter-spacing:0.5px;">console.anthropic.com → API Keys</div>
   </div>
 </div>
 
-<div class="scan-line"></div>
-
 <div class="app">
+
   <!-- HEADER -->
   <div class="header">
     <div class="header-top">
       <div class="logo">
         <div class="logo-mark">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#D4A53E" stroke-width="2">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
         </div>
-        <div>
-          <div class="logo-text">ALFRED</div>
-          <div class="logo-sub">STRATEGIC OS</div>
+        <div class="logo-text-block">
+          <div class="logo-name">NEX<span>A</span> OS</div>
+          <div class="logo-sub">Strategic Operating System</div>
         </div>
       </div>
-      <div class="status-dot">
-        <div class="dot"></div>
-        ONLINE
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        Online
       </div>
     </div>
 
     <div class="nav">
-      <button class="nav-btn active" onclick="switchPanel('chat')">
+      <button class="nav-btn active" onclick="switchPanel('chat', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Alfred
+        Command
       </button>
-      <button class="nav-btn" onclick="switchPanel('priority')">
+      <button class="nav-btn" onclick="switchPanel('status', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Status
       </button>
-      <button class="nav-btn" onclick="switchPanel('research')">
+      <button class="nav-btn" onclick="switchPanel('research', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Research
       </button>
     </div>
   </div>
 
-  <!-- CHAT PANEL -->
+  <!-- ═══ COMMAND / CHAT PANEL ═══ -->
   <div class="panel active" id="panel-chat">
     <div class="chat-messages" id="chatMessages">
-      <div class="msg alfred">
-        <div class="msg-label">Alfred OS</div>
+      <div class="msg nexa">
+        <div class="msg-label">Nexa OS</div>
         <div class="msg-bubble">
-          System online. I am Alfred OS — your strategic operating system.<br><br>
+          System online. I am Nexa OS — your strategic operating system.<br><br>
           Before we proceed, I need three data points:<br><br>
           <span class="tag">01</span> Current trading account size<br>
           <span class="tag">02</span> Primary debt target + balance<br>
@@ -914,7 +859,7 @@
         <button class="qp-btn" onclick="quickPrompt('I want to break a rule')">Rule override</button>
       </div>
       <div class="input-row">
-        <textarea class="chat-input" id="chatInput" placeholder="Talk to Alfred..." rows="1" 
+        <textarea class="chat-input" id="chatInput" placeholder="Talk to Nexa..." rows="1"
           onkeydown="handleKey(event)"
           oninput="autoResize(this)"></textarea>
         <button class="send-btn" onclick="sendMessage()">
@@ -924,17 +869,17 @@
     </div>
   </div>
 
-  <!-- PRIORITY / STATUS PANEL -->
-  <div class="panel" id="panel-priority">
-    <div class="priority-panel">
+  <!-- ═══ STATUS PANEL ═══ -->
+  <div class="panel" id="panel-status">
+    <div class="status-panel">
 
-      <div class="section-label">Trading Status</div>
-      <div class="status-card">
-        <div class="status-card-title">30-Day Rebuild Protocol</div>
+      <div class="section-label">Trading Protocol</div>
+      <div class="stat-card">
+        <div class="stat-card-title">30-Day Rebuild — Active</div>
         <div class="stat-grid">
           <div class="stat-item">
             <div class="stat-label">Days In</div>
-            <div class="stat-value accent" id="daysIn">—</div>
+            <div class="stat-value gold" id="daysIn">—</div>
           </div>
           <div class="stat-item">
             <div class="stat-label">Risk / Trade</div>
@@ -942,16 +887,16 @@
           </div>
           <div class="stat-item">
             <div class="stat-label">Trades Today</div>
-            <div class="stat-value" id="tradesDisplay">0 / 2</div>
+            <div class="stat-value ok" id="tradesDisplay">0 / 2</div>
           </div>
           <div class="stat-item">
             <div class="stat-label">Drawdown</div>
-            <div class="stat-value ok" id="drawdownDisplay">—</div>
+            <div class="stat-value" id="drawdownDisplay">—</div>
           </div>
         </div>
       </div>
 
-      <div class="section-label">Weekly Context</div>
+      <div class="section-label">Weekly Update</div>
       <div class="context-form">
         <div class="form-row">
           <label class="form-label">Account Size</label>
@@ -966,30 +911,30 @@
           <input class="form-input" id="weeklyIncome" placeholder="$0.00" type="text">
         </div>
         <div class="form-row">
-          <label class="form-label">Trades Today (0, 1, or 2)</label>
+          <label class="form-label">Trades Today (0–2)</label>
           <input class="form-input" id="tradesToday" placeholder="0" type="number" min="0" max="2">
         </div>
-        <button class="update-btn" onclick="updateContext()">UPDATE ALFRED</button>
+        <button class="gold-btn" onclick="updateContext()">UPDATE SYSTEM</button>
       </div>
 
-      <div class="section-label">Life Priority Stack</div>
+      <div class="section-label">Priority Stack</div>
 
-      <div class="priority-item active">
+      <div class="priority-item active-priority">
         <div class="priority-num">1</div>
         <div class="priority-info">
           <div class="priority-name">Debt Elimination</div>
           <div class="priority-sub">High interest first</div>
         </div>
-        <div class="priority-status status-active">ACTIVE</div>
+        <div class="priority-badge badge-active">Active</div>
       </div>
 
-      <div class="priority-item active">
+      <div class="priority-item active-priority">
         <div class="priority-num">2</div>
         <div class="priority-info">
           <div class="priority-name">Margin Creation</div>
           <div class="priority-sub">Monthly breathing room</div>
         </div>
-        <div class="priority-status status-active">ACTIVE</div>
+        <div class="priority-badge badge-active">Active</div>
       </div>
 
       <div class="priority-item">
@@ -998,7 +943,7 @@
           <div class="priority-name">Capital Preservation</div>
           <div class="priority-sub">Protect what exists</div>
         </div>
-        <div class="priority-status status-pending">ONGOING</div>
+        <div class="priority-badge badge-ongoing">Ongoing</div>
       </div>
 
       <div class="priority-item">
@@ -1007,25 +952,25 @@
           <div class="priority-name">Trading Execution</div>
           <div class="priority-sub">30-day rebuild protocol</div>
         </div>
-        <div class="priority-status status-active">REBUILD</div>
+        <div class="priority-badge badge-rebuild">Rebuild</div>
       </div>
 
       <div class="priority-item">
         <div class="priority-num">5</div>
         <div class="priority-info">
           <div class="priority-name">Long-Term Investing</div>
-          <div class="priority-sub">Systematic accumulation</div>
+          <div class="priority-sub">VTI — systematic accumulation</div>
         </div>
-        <div class="priority-status status-locked">LOCKED</div>
+        <div class="priority-badge badge-locked">Locked</div>
       </div>
 
       <div class="priority-item">
         <div class="priority-num">6</div>
         <div class="priority-info">
           <div class="priority-name">AI System Building</div>
-          <div class="priority-sub">Apps, tools, dashboards</div>
+          <div class="priority-sub">Apps, tools, Nexa ecosystem</div>
         </div>
-        <div class="priority-status status-locked">LOCKED</div>
+        <div class="priority-badge badge-locked">Locked</div>
       </div>
 
       <div class="priority-item">
@@ -1034,7 +979,7 @@
           <div class="priority-name">Creative Expansion</div>
           <div class="priority-sub">Mythos Frame, SIVR</div>
         </div>
-        <div class="priority-status status-locked">LOCKED</div>
+        <div class="priority-badge badge-locked">Locked</div>
       </div>
 
       <div class="priority-item">
@@ -1043,18 +988,18 @@
           <div class="priority-name">Scaling</div>
           <div class="priority-sub">Growth after foundation</div>
         </div>
-        <div class="priority-status status-locked">LOCKED</div>
+        <div class="priority-badge badge-locked">Locked</div>
       </div>
 
     </div>
   </div>
 
-  <!-- RESEARCH PANEL -->
+  <!-- ═══ RESEARCH PANEL ═══ -->
   <div class="panel" id="panel-research">
     <div class="research-panel">
 
       <div class="section-label">Research Mode</div>
-      <div class="research-mode-select">
+      <div class="mode-grid">
         <div class="mode-card selected" onclick="selectMode('everbee')" id="mode-everbee">
           <div class="mode-icon">📦</div>
           <div class="mode-name">Everbee</div>
@@ -1077,163 +1022,51 @@
         </div>
       </div>
 
-      <!-- EVERBEE CHECKLIST -->
+      <!-- EVERBEE -->
       <div id="checklist-everbee">
         <div class="checklist-card">
           <div class="checklist-title">What to pull from Everbee</div>
-          <div class="checklist-item">
-            <div class="check-num">01</div>
-            <div class="check-text">
-              Monthly Revenue Estimate
-              <div class="check-detail">Look for $1,000+ / mo. Below that, margin is too thin.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">02</div>
-            <div class="check-text">
-              Listing Age
-              <div class="check-detail">Older listings with steady revenue = validated demand. New = unproven.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">03</div>
-            <div class="check-text">
-              Review Count + Rating
-              <div class="check-detail">High reviews = competitive moat. Low reviews = entry window.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">04</div>
-            <div class="check-text">
-              Competition Score / Listing Count
-              <div class="check-detail">How many listings compete for this keyword?</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">05</div>
-            <div class="check-text">
-              Price Point
-              <div class="check-detail">Is the market price sustainable after fulfillment + platform fees?</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">06</div>
-            <div class="check-text">
-              Trend Direction
-              <div class="check-detail">Growing, flat, or declining? Don't enter a dying market.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
+          <div class="checklist-item"><div class="check-num">01</div><div class="check-text">Monthly Revenue Estimate<div class="check-detail">Look for $1,000+/mo. Below that, margin is too thin.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">02</div><div class="check-text">Listing Age<div class="check-detail">Older listings with steady revenue = validated demand.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">03</div><div class="check-text">Review Count + Rating<div class="check-detail">High reviews = moat. Low reviews = entry window.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">04</div><div class="check-text">Competition Score<div class="check-detail">How many listings compete for this keyword?</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">05</div><div class="check-text">Price Point<div class="check-detail">Sustainable after fulfillment + platform fees?</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">06</div><div class="check-text">Trend Direction<div class="check-detail">Growing, flat, or declining?</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
         </div>
-
         <div class="analysis-area">
-          <div class="checklist-title">Paste your Everbee data</div>
-          <textarea class="analysis-textarea" id="everbeeData" placeholder="Paste your data points here:&#10;Revenue: $X/mo&#10;Listing age: X months&#10;Reviews: X / Rating: X&#10;Competition: X listings&#10;Price: $X&#10;Trend: growing/flat/declining"></textarea>
-          <button class="analyze-btn" onclick="analyzeEverbee()">RUN ALFRED ANALYSIS</button>
+          <div class="checklist-title">Paste Everbee data</div>
+          <textarea class="analysis-textarea" id="everbeeData" placeholder="Revenue: $X/mo&#10;Listing age: X months&#10;Reviews: X / Rating: X&#10;Competition: X listings&#10;Price: $X&#10;Trend: growing/flat/declining"></textarea>
+          <button class="gold-btn" onclick="analyzeEverbee()">Run Analysis</button>
         </div>
-
         <div class="analysis-result" id="everbeeResult">
-          <div class="result-section">
-            <div class="result-label">Verdict</div>
-            <div class="verdict pursue" id="everbeeVerdict">PURSUE</div>
-          </div>
-          <div class="result-section">
-            <div class="result-label">Assessment</div>
-            <div class="result-text" id="everbeeAssessment"></div>
-          </div>
-          <div class="result-section">
-            <div class="result-label">Risk Flags</div>
-            <div class="result-text" id="everbeeRisks"></div>
-          </div>
-          <div class="result-section">
-            <div class="result-label">Next Step</div>
-            <div class="result-text" id="everbeeNext"></div>
-          </div>
+          <div class="result-label">Verdict</div><div class="verdict pursue" id="everbeeVerdict">—</div>
+          <div class="result-label">Assessment</div><div class="result-text" id="everbeeAssessment"></div>
+          <div class="result-label">Risk Flags</div><div class="result-text" id="everbeeRisks"></div>
+          <div class="result-label">Next Step</div><div class="result-text" id="everbeeNext"></div>
         </div>
       </div>
 
-      <!-- META ADS CHECKLIST -->
+      <!-- META ADS -->
       <div id="checklist-meta" style="display:none">
         <div class="checklist-card">
           <div class="checklist-title">What to look for in Meta Ads Library</div>
-          <div class="checklist-item">
-            <div class="check-num">01</div>
-            <div class="check-text">
-              Search your product keyword — note total ad count
-              <div class="check-detail">High ad count = proven demand. Low count = unvalidated or niche.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">02</div>
-            <div class="check-text">
-              Filter: Ads running 30+ days
-              <div class="check-detail">Long-running ads = profitable. If they weren't converting, they'd be off.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">03</div>
-            <div class="check-text">
-              Count unique advertisers
-              <div class="check-detail">Multiple brands running similar ads = real market. One = test the waters.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">04</div>
-            <div class="check-text">
-              Dominant ad format
-              <div class="check-detail">Video, image, carousel? Match what's already working.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">05</div>
-            <div class="check-text">
-              Note recurring creative angles
-              <div class="check-detail">Same hook appearing across multiple ads = proven angle. Use it.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">06</div>
-            <div class="check-text">
-              Check CTA and landing page type
-              <div class="check-detail">Direct to product? Lead capture? Tells you their funnel structure.</div>
-            </div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
+          <div class="checklist-item"><div class="check-num">01</div><div class="check-text">Search keyword — note total ad count<div class="check-detail">High count = proven demand.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">02</div><div class="check-text">Filter: Ads running 30+ days<div class="check-detail">Long-running = profitable. They'd be off if not converting.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">03</div><div class="check-text">Count unique advertisers<div class="check-detail">Multiple brands = real market.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">04</div><div class="check-text">Dominant ad format<div class="check-detail">Video, image, carousel? Match what's working.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">05</div><div class="check-text">Recurring creative angle<div class="check-detail">Same hook appearing across ads = proven angle.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">06</div><div class="check-text">CTA and landing page type<div class="check-detail">Tells you their funnel structure.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
         </div>
-
         <div class="analysis-area">
-          <div class="checklist-title">Paste your Meta Ads data</div>
-          <textarea class="analysis-textarea" id="metaData" placeholder="Total ads found: X&#10;30+ day ads: X&#10;Unique advertisers: X&#10;Format: video/image/carousel&#10;Recurring hook: [describe]&#10;CTA type: [describe]"></textarea>
-          <button class="analyze-btn" onclick="analyzeMeta()">RUN ALFRED ANALYSIS</button>
+          <div class="checklist-title">Paste Meta Ads data</div>
+          <textarea class="analysis-textarea" id="metaData" placeholder="Total ads: X&#10;30+ day ads: X&#10;Unique advertisers: X&#10;Format: video/image/carousel&#10;Recurring hook: [describe]&#10;CTA type: [describe]"></textarea>
+          <button class="gold-btn" onclick="analyzeMeta()">Run Analysis</button>
         </div>
-
         <div class="analysis-result" id="metaResult">
-          <div class="result-section">
-            <div class="result-label">Verdict</div>
-            <div class="verdict" id="metaVerdict">PURSUE</div>
-          </div>
-          <div class="result-section">
-            <div class="result-label">Assessment</div>
-            <div class="result-text" id="metaAssessment"></div>
-          </div>
-          <div class="result-section">
-            <div class="result-label">Angle Recommendation</div>
-            <div class="result-text" id="metaAngle"></div>
-          </div>
-          <div class="result-section">
-            <div class="result-label">Next Step</div>
-            <div class="result-text" id="metaNext"></div>
-          </div>
+          <div class="result-label">Verdict</div><div class="verdict" id="metaVerdict">—</div>
+          <div class="result-label">Assessment</div><div class="result-text" id="metaAssessment"></div>
+          <div class="result-label">Angle Recommendation</div><div class="result-text" id="metaAngle"></div>
+          <div class="result-label">Next Step</div><div class="result-text" id="metaNext"></div>
         </div>
       </div>
 
@@ -1241,42 +1074,22 @@
       <div id="checklist-niche" style="display:none">
         <div class="checklist-card">
           <div class="checklist-title">Niche Viability Questions</div>
-          <div class="checklist-item">
-            <div class="check-num">01</div>
-            <div class="check-text">Does this niche have a passionate, identifiable audience?<div class="check-detail">Can you name exactly who buys this and why?</div></div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">02</div>
-            <div class="check-text">Is demand evergreen or seasonal?<div class="check-detail">Seasonal is fine — but you need to know the cycle.</div></div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">03</div>
-            <div class="check-text">Can you differentiate without price war?<div class="check-detail">Design angle, brand angle, or quality angle?</div></div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">04</div>
-            <div class="check-text">Margin after fulfillment + platform fees?<div class="check-detail">POD margin floor: aim for 30%+ after all costs.</div></div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">05</div>
-            <div class="check-text">Does this align with your current priority stack?<div class="check-detail">Does pursuing this create margin or distraction?</div></div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
+          <div class="checklist-item"><div class="check-num">01</div><div class="check-text">Passionate, identifiable audience?<div class="check-detail">Can you name exactly who buys this and why?</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">02</div><div class="check-text">Evergreen or seasonal demand?<div class="check-detail">Seasonal is fine — but know the cycle.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">03</div><div class="check-text">Differentiation without price war?<div class="check-detail">Design, brand, or quality angle?</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">04</div><div class="check-text">Margin after all costs?<div class="check-detail">Target 30%+ after fulfillment + fees.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">05</div><div class="check-text">Aligns with priority stack?<div class="check-detail">Creates margin or distraction?</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
         </div>
         <div class="analysis-area">
           <div class="checklist-title">Describe the niche</div>
-          <textarea class="analysis-textarea" id="nicheData" placeholder="Niche: [name]&#10;Audience: [who buys this]&#10;Demand type: evergreen/seasonal&#10;Differentiation idea: [how you'd stand out]&#10;Est. margin: X%&#10;Time required: [hours/week]"></textarea>
-          <button class="analyze-btn" onclick="analyzeNiche()">RUN ALFRED ANALYSIS</button>
+          <textarea class="analysis-textarea" id="nicheData" placeholder="Niche: [name]&#10;Audience: [who buys]&#10;Demand: evergreen/seasonal&#10;Differentiation: [angle]&#10;Est. margin: X%&#10;Time: [hrs/week]"></textarea>
+          <button class="gold-btn" onclick="analyzeNiche()">Run Analysis</button>
         </div>
         <div class="analysis-result" id="nicheResult">
-          <div class="result-section"><div class="result-label">Verdict</div><div class="verdict" id="nicheVerdict">—</div></div>
-          <div class="result-section"><div class="result-label">Assessment</div><div class="result-text" id="nicheAssessment"></div></div>
-          <div class="result-section"><div class="result-label">Stack Alignment</div><div class="result-text" id="nicheStack"></div></div>
-          <div class="result-section"><div class="result-label">Next Step</div><div class="result-text" id="nicheNext"></div></div>
+          <div class="result-label">Verdict</div><div class="verdict" id="nicheVerdict">—</div>
+          <div class="result-label">Assessment</div><div class="result-text" id="nicheAssessment"></div>
+          <div class="result-label">Stack Alignment</div><div class="result-text" id="nicheStack"></div>
+          <div class="result-label">Next Step</div><div class="result-text" id="nicheNext"></div>
         </div>
       </div>
 
@@ -1284,37 +1097,21 @@
       <div id="checklist-idea" style="display:none">
         <div class="checklist-card">
           <div class="checklist-title">Idea Stack Filter</div>
-          <div class="checklist-item">
-            <div class="check-num">01</div>
-            <div class="check-text">Which priority does this serve?<div class="check-detail">If it's not 1–4, it's locked until foundation is stable.</div></div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">02</div>
-            <div class="check-text">Does it create margin or consume it?<div class="check-detail">Any upfront cost or time debt needs justification.</div></div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">03</div>
-            <div class="check-text">Is this strategic or emotional?<div class="check-detail">Be honest. New ideas during stress = usually emotional.</div></div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
-          <div class="checklist-item">
-            <div class="check-num">04</div>
-            <div class="check-text">What does this replace in your attention budget?<div class="check-detail">Adding something means something else gets less.</div></div>
-            <div class="check-box" onclick="toggleCheck(this)"></div>
-          </div>
+          <div class="checklist-item"><div class="check-num">01</div><div class="check-text">Which priority does this serve?<div class="check-detail">If not 1–4, locked until foundation is stable.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">02</div><div class="check-text">Creates margin or consumes it?<div class="check-detail">Any upfront cost needs justification.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">03</div><div class="check-text">Strategic or emotional trigger?<div class="check-detail">New ideas during stress = usually emotional.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
+          <div class="checklist-item"><div class="check-num">04</div><div class="check-text">What does this replace in your attention budget?<div class="check-detail">Adding something means something else gets less.</div></div><div class="check-box" onclick="toggleCheck(this)"></div></div>
         </div>
         <div class="analysis-area">
           <div class="checklist-title">Describe the idea</div>
-          <textarea class="analysis-textarea" id="ideaData" placeholder="Idea: [describe it]&#10;Why now: [what triggered this]&#10;Priority it serves: [1-8]&#10;Time required: [hrs/week]&#10;Cost: $X upfront / $X ongoing&#10;What it replaces: [what gets less attention]"></textarea>
-          <button class="analyze-btn" onclick="analyzeIdea()">RUN ALFRED ANALYSIS</button>
+          <textarea class="analysis-textarea" id="ideaData" placeholder="Idea: [describe]&#10;Why now: [trigger]&#10;Priority served: [1-8]&#10;Time: [hrs/week]&#10;Cost: $X&#10;Replaces: [what gets less]"></textarea>
+          <button class="gold-btn" onclick="analyzeIdea()">Run Analysis</button>
         </div>
         <div class="analysis-result" id="ideaResult">
-          <div class="result-section"><div class="result-label">Verdict</div><div class="verdict" id="ideaVerdict">—</div></div>
-          <div class="result-section"><div class="result-label">Assessment</div><div class="result-text" id="ideaAssessment"></div></div>
-          <div class="result-section"><div class="result-label">Flag</div><div class="result-text" id="ideaFlag"></div></div>
-          <div class="result-section"><div class="result-label">Next Step</div><div class="result-text" id="ideaNext"></div></div>
+          <div class="result-label">Verdict</div><div class="verdict" id="ideaVerdict">—</div>
+          <div class="result-label">Assessment</div><div class="result-text" id="ideaAssessment"></div>
+          <div class="result-label">Flag</div><div class="result-text" id="ideaFlag"></div>
+          <div class="result-label">Next Step</div><div class="result-text" id="ideaNext"></div>
         </div>
       </div>
 
@@ -1324,6 +1121,7 @@
 </div>
 
 <script>
+
 // Markdown renderer
 function renderMarkdown(text) {
   return text
@@ -1344,7 +1142,7 @@ function renderMarkdown(text) {
 }
 
 // ---- ALFRED OS BRAIN ----
-const ALFRED_PERSONA = `You are Alfred OS — a strategic operating system. Calm, precise, analytical. No hype. No fluff. Clarity over comfort.
+const ALFRED_PERSONA = `You are Nexa OS — a strategic operating system. Calm, precise, analytical. No hype. No fluff. Clarity over comfort.
 
 Life Priority Stack (non-negotiable order):
 1. Debt elimination (high interest first)
@@ -1371,11 +1169,16 @@ Identity: Builder. Systems architect. Capital protector. Long-term strategist. O
 Response format: Analysis → Risks → Optimization → Next Steps. Keep it tight. Challenge weak logic. Always offer one alternative or improvement.`;
 
 // Panel switching
-function switchPanel(name) {
+function switchPanel(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
+  // Map old names to new panel IDs
+  const map = {'chat': 'chat', 'priority': 'status', 'research': 'research', 'status': 'status'};
+  const panelId = map[name] || name;
+  const panel = document.getElementById('panel-' + panelId);
+  if (panel) panel.classList.add('active');
+  if (btn) btn.classList.add('active');
+  else if (event && event.currentTarget) event.currentTarget.classList.add('active');
 }
 
 // Research mode switching
@@ -1437,8 +1240,8 @@ function updateContext() {
   }
 
   // Switch to chat and confirm
-  switchPanel('chat');
-  addMessage('alfred', `Context updated. Operating on current data.\n\nAccount: ${context.accountSize || 'not set'}\nDebt target: ${context.debtBalance || 'not set'}\nIncome est.: ${context.weeklyIncome || 'not set'}\nTrades today: ${context.tradesToday}/2\n\nPriority domain is locked. Proceed with discipline.`);
+  switchPanel('chat', null);
+  addMessage('nexa', `Context updated. Operating on current data.\n\nAccount: ${context.accountSize || 'not set'}\nDebt target: ${context.debtBalance || 'not set'}\nIncome est.: ${context.weeklyIncome || 'not set'}\nTrades today: ${context.tradesToday}/2\n\nPriority domain is locked. Proceed with discipline.`);
 }
 
 // API Key management
@@ -1457,7 +1260,7 @@ function saveApiKey() {
   NEXAKEY = val;
   sessionStorage.setItem('nexa_api_key', val);
   document.getElementById('keyModal').style.display = 'none';
-  addMessage('alfred', 'API key accepted. System fully operational.\n\nBefore we proceed, I need three data points:\n\n<span class="tag">01</span> Current trading account size\n<span class="tag">02</span> Primary debt target + balance\n<span class="tag">03</span> Today\'s focus domain\n\nOperate from data. Not assumption.');
+  addMessage('nexa', 'API key accepted. System fully operational.\n\nBefore we proceed, I need three data points:\n\n<span class="tag">01</span> Current trading account size\n<span class="tag">02</span> Primary debt target + balance\n<span class="tag">03</span> Today\'s focus domain\n\nOperate from data. Not assumption.');
 }
 
 // Chat
@@ -1502,13 +1305,13 @@ async function sendMessage() {
     if (!response.ok) {
       typingEl.remove();
       const errDetail = data.error?.message || response.status;
-      addMessage('alfred', '⚠ API Error: ' + errDetail + '. Check your API key in Settings.');
+      addMessage('nexa', '⚠ API Error: ' + errDetail + '. Check your API key in Settings.');
       return;
     }
     const reply = data.content?.[0]?.text || 'System error. Try again.';
     
     typingEl.remove();
-    addMessage('alfred', reply);
+    addMessage('nexa', reply);
     messages.push({ role: 'assistant', content: reply });
     
     // Keep conversation manageable
@@ -1516,7 +1319,7 @@ async function sendMessage() {
     
   } catch (err) {
     typingEl.remove();
-    addMessage('alfred', '⚠ Connection error: ' + (err.message || 'unknown'));
+    addMessage('nexa', '⚠ Connection error: ' + (err.message || 'unknown'));
   }
 }
 
@@ -1525,7 +1328,7 @@ function addMessage(role, text) {
   const msg = document.createElement('div');
   msg.className = `msg ${role}`;
   
-  const label = role === 'alfred' ? 'Alfred OS' : 'You';
+  const label = role === 'nexa' ? 'Nexa OS' : 'You';
   const formatted = renderMarkdown(text);
   
   msg.innerHTML = `
@@ -1542,7 +1345,7 @@ function showTyping() {
   const wrapper = document.createElement('div');
   wrapper.className = 'msg alfred';
   wrapper.innerHTML = `
-    <div class="msg-label">Alfred OS</div>
+    <div class="msg-label">Nexa OS</div>
     <div class="typing"><span></span><span></span><span></span></div>
   `;
   container.appendChild(wrapper);
@@ -1683,6 +1486,7 @@ function analyzeIdea() {
 
 // On load — show key modal if no key
 window.addEventListener("load", () => { if (!NEXAKEY) showKeyModal(); });
+
 </script>
 </body>
 </html>
