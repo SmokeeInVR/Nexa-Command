@@ -395,8 +395,11 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
       <button class="nav-btn active" onclick="switchPanel('command',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Command
       </button>
-      <button class="nav-btn" onclick="switchPanel('status',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Status
+      <button class="nav-btn" onclick="switchPanel('goals',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>Goals
+      </button>
+      <button class="nav-btn" onclick="switchPanel('finance',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Finance
       </button>
       <button class="nav-btn" onclick="switchPanel('explore',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Explore
@@ -412,7 +415,8 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         <div class="msg-bubble">
           System online. I am Nexa OS — your strategic operating system.<br><br>
           <span class="tag">BRIEF</span> Morning briefing with your real data<br>
-          <span class="tag">Status</span> Goals, milestones, finances, trading<br>
+          <span class="tag">Goals</span> North Star, milestones, daily actions<br>
+          <span class="tag">Finance</span> Live data, trading log<br>
           <span class="tag">Explore</span> Research, strategy, big ideas<br><br>
           Operate from data. Not assumption.
         </div>
@@ -440,8 +444,8 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
     </div>
   </div>
 
-  <!-- STATUS PANEL -->
-  <div class="panel" id="panel-status">
+  <!-- GOALS PANEL -->
+  <div class="panel" id="panel-goals">
     <div class="status-panel">
 
       <div class="section-label">North Star</div>
@@ -481,11 +485,18 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         <button class="add-milestone-btn" style="flex:1.4;border-color:var(--border-gold);color:var(--gold);" onclick="openPlan()">✦ Plan with NEXA</button>
       </div>
 
-      <div style="height:16px;"></div>
-      <div class="section-label">Nexa Finance — Live</div>
+      <div style="height:24px;"></div>
+    </div>
+  </div>
+
+  <!-- FINANCE PANEL -->
+  <div class="panel" id="panel-finance">
+    <div class="status-panel">
+
+      <div class="section-label">Financial Snapshot</div>
       <div class="finance-card">
         <div class="finance-card-header">
-          <div class="finance-card-title">Financial Snapshot</div>
+          <div class="finance-card-title">Nexa Finance — Live</div>
           <div class="finance-sync-meta" id="financeSyncMeta">Not synced</div>
         </div>
         <div id="financeContent">
@@ -516,25 +527,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         <div id="stopWarning" style="display:none;margin-top:10px;padding:8px 10px;background:rgba(224,85,85,0.1);border:1px solid rgba(224,85,85,0.25);border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--warn);letter-spacing:0.5px;line-height:1.5;"></div>
       </div>
 
-      <div class="section-label">Manual Debt Log</div>
-      <div class="debt-card">
-        <div class="debt-item" id="debtDisplay"><div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:10px 0;">No debt data logged yet</div></div>
-        <div class="debt-input-row">
-          <input class="debt-input" id="debtName" placeholder="Debt name">
-          <input class="debt-input" id="debtAmt" placeholder="Balance $" style="max-width:110px;">
-          <button class="debt-update-btn" onclick="updateDebt()">Log</button>
-        </div>
-      </div>
-
-      <div class="section-label">Priority Stack</div>
-      <div class="priority-item p-active"><div class="p-num">1</div><div class="p-info"><div class="p-name">Debt Elimination</div><div class="p-sub">High interest first</div></div><div class="p-badge b-active">Active</div></div>
-      <div class="priority-item p-active"><div class="p-num">2</div><div class="p-info"><div class="p-name">Margin Creation</div><div class="p-sub">Monthly breathing room</div></div><div class="p-badge b-active">Active</div></div>
-      <div class="priority-item"><div class="p-num">3</div><div class="p-info"><div class="p-name">Capital Preservation</div><div class="p-sub">Protect what exists</div></div><div class="p-badge b-ongoing">Ongoing</div></div>
-      <div class="priority-item"><div class="p-num">4</div><div class="p-info"><div class="p-name">Trading Execution</div><div class="p-sub">30-day rebuild protocol</div></div><div class="p-badge b-rebuild">Rebuild</div></div>
-      <div class="priority-item"><div class="p-num">5</div><div class="p-info"><div class="p-name">Long-Term Investing</div><div class="p-sub">VTI — systematic</div></div><div class="p-badge b-locked">Locked</div></div>
-      <div class="priority-item"><div class="p-num">6</div><div class="p-info"><div class="p-name">AI System Building</div><div class="p-sub">Nexa ecosystem</div></div><div class="p-badge b-locked">Locked</div></div>
-      <div class="priority-item"><div class="p-num">7</div><div class="p-info"><div class="p-name">Creative Expansion</div><div class="p-sub">Mythos Frame, SIVR</div></div><div class="p-badge b-locked">Locked</div></div>
-      <div class="priority-item"><div class="p-num">8</div><div class="p-info"><div class="p-name">Scaling</div><div class="p-sub">Growth after foundation</div></div><div class="p-badge b-locked">Locked</div></div>
+      <div style="height:24px;"></div>
     </div>
   </div>
 
@@ -965,7 +958,7 @@ function savePlanToSystem(){
   renderMilestones();
   renderTodayAction();
   // Switch to status to see it
-  switchPanel('status',document.querySelectorAll('.nav-btn')[1]);
+  switchPanel('goals',document.querySelectorAll('.nav-btn')[1]);
   addMessage('nexa','✓ Plan locked in. Your North Star and milestones are set. Go to the **Status** tab to see your full roadmap — and pick your first daily action.');
 }
 
