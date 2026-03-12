@@ -118,7 +118,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 .today-btn{padding:7px 14px;border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;border:1px solid;}
 .today-btn.done-btn{background:rgba(92,184,92,0.1);border-color:rgba(92,184,92,0.3);color:var(--success);}
 .today-btn.done-btn.completed{background:rgba(92,184,92,0.2);}
-.today-btn.alfred-btn{background:rgba(212,165,62,0.08);border-color:var(--border-gold);color:var(--gold);}
+.today-btn.nexa-btn{background:rgba(212,165,62,0.08);border-color:var(--border-gold);color:var(--gold);}
 
 /* MILESTONES */
 .milestone-item{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;}
@@ -324,7 +324,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 <div class="plan-overlay" id="planOverlay">
   <div class="plan-header">
     <div>
-      <div class="plan-title">PLAN WITH <span>ALFRED</span></div>
+      <div class="plan-title">PLAN WITH <span>NEXA</span></div>
       <div class="plan-sub">Goal Architect Mode — talk it out, build your system</div>
     </div>
     <button class="plan-close" onclick="closePlan()">✕ Close</button>
@@ -341,7 +341,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
   </div>
   <div class="plan-input-area">
     <div class="input-row">
-      <textarea class="chat-input" id="planInput" placeholder="Tell ALFRED what you're building toward..." rows="1" onkeydown="handlePlanKey(event)" oninput="autoResize(this)"></textarea>
+      <textarea class="chat-input" id="planInput" placeholder="Tell NEXA what you're building toward..." rows="1" onkeydown="handlePlanKey(event)" oninput="autoResize(this)"></textarea>
       <button class="send-btn" onclick="sendPlanMessage()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
@@ -465,10 +465,10 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
       <div class="section-label">Today's Move</div>
       <div class="today-card">
         <div class="today-label">One thing to move forward</div>
-        <div class="today-action-text empty" id="todayActionText">No action selected — pick one from milestones below or ask ALFRED.</div>
+        <div class="today-action-text empty" id="todayActionText">No action selected — pick one from milestones below or ask NEXA.</div>
         <div class="today-btns">
           <button class="today-btn done-btn" id="todayDoneBtn" onclick="completeTodayAction()">✓ Done for today</button>
-          <button class="today-btn alfred-btn" onclick="askAlfredForAction()">✦ Ask ALFRED</button>
+          <button class="today-btn nexa-btn" onclick="askNexaForAction()">✦ Ask NEXA</button>
         </div>
       </div>
 
@@ -476,7 +476,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
       <div id="milestonesContainer"></div>
       <div style="display:flex;gap:8px;margin-top:4px;">
         <button class="add-milestone-btn" style="flex:1;" onclick="openMsModal(-1)">+ Add Milestone</button>
-        <button class="add-milestone-btn" style="flex:1.4;border-color:var(--border-gold);color:var(--gold);" onclick="openPlan()">✦ Plan with ALFRED</button>
+        <button class="add-milestone-btn" style="flex:1.4;border-color:var(--border-gold);color:var(--gold);" onclick="openPlan()">✦ Plan with NEXA</button>
       </div>
 
       <div style="height:16px;"></div>
@@ -673,7 +673,7 @@ function renderTodayAction(){
   if(todayAction.date!==todayStr()&&todayAction.text){todayAction.completed=false;todayAction.date=todayStr();save('todayAction',todayAction);}
   const el=document.getElementById('todayActionText'),btn=document.getElementById('todayDoneBtn');
   if(todayAction.text){el.textContent=todayAction.text;el.classList.remove('empty');btn.textContent=todayAction.completed?'✓ Completed today':'✓ Done for today';btn.classList.toggle('completed',todayAction.completed);}
-  else{el.textContent='No action selected — pick one from milestones below or ask ALFRED.';el.classList.add('empty');}
+  else{el.textContent='No action selected — pick one from milestones below or ask NEXA.';el.classList.add('empty');}
 }
 
 function completeTodayAction(){
@@ -685,7 +685,7 @@ function completeTodayAction(){
   renderNorthStar();renderTodayAction();
 }
 
-async function askAlfredForAction(){
+async function askNexaForAction(){
   if(!NEXAKEY){showKeyModal();return;}
   switchPanel('command',document.querySelector('.nav-btn'));
   const gc=northStar.goal?`North Star: "${northStar.goal}"`:'No North Star set.';
@@ -714,7 +714,7 @@ ${mc}`;
   messages.push({role:'user',content:prompt});
   const t=showTyping();
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:500,system:ALFRED_PERSONA+liveFinanceContext,messages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:500,system:NEXA_PERSONA+liveFinanceContext,messages})});
     const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});
     speak(reply,'voiceOrb');
@@ -787,15 +787,15 @@ async function sendExplore(){
   if(!NEXAKEY){showKeyModal();return;}
   const inp=document.getElementById('exploreInput'),text=inp.value.trim();if(!text)return;inp.value='';inp.style.height='auto';
   addExploreMsg('user',text);exploreMessages.push({role:'user',content:text});const t=showExploreTyping();
-  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+ALFRED_PERSONA+liveFinanceContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
+  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+NEXA_PERSONA+liveFinanceContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
   catch(e){t.remove();addExploreMsg('nexa','⚠ '+e.message);}
 }
 function addExploreMsg(r,t){const c=document.getElementById('exploreMessages'),m=document.createElement('div');m.className='msg '+r;m.innerHTML=`<div class="msg-label">${r==='nexa'?'Nexa OS':'You'}</div><div class="msg-bubble">${renderMarkdown(t)}</div>`;c.appendChild(m);c.scrollTop=c.scrollHeight;}
 function showExploreTyping(){const c=document.getElementById('exploreMessages'),w=document.createElement('div');w.className='msg nexa';w.innerHTML='<div class="msg-label">Nexa OS</div><div class="typing"><span></span><span></span><span></span></div>';c.appendChild(w);c.scrollTop=c.scrollHeight;return w;}
 function handleExploreKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendExplore();}}
 
-// ══ ALFRED ══
-const ALFRED_PERSONA=`You are Nexa OS — a strategic operating system. Calm, precise, analytical. No hype. No fluff. Clarity over comfort.
+// ══ NEXA ══
+const NEXA_PERSONA=`You are Nexa OS — a strategic operating system. Calm, precise, analytical. No hype. No fluff. Clarity over comfort.
 
 Life Priority Stack (non-negotiable order):
 1. Debt elimination (high interest first)
@@ -843,7 +843,7 @@ async function sendMessage(){
   addMessage('user',text);messages.push({role:'user',content:text});const t=showTyping();
   try{
     const gc=northStar.goal?`\n\nNorth Star: "${northStar.goal}" (target: ${northStar.date||'none'}). Streak: ${streak.count} days.`:'';
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system:ALFRED_PERSONA+liveFinanceContext+gc,messages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system:NEXA_PERSONA+liveFinanceContext+gc,messages})});
     const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ API Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});if(messages.length>20)messages=messages.slice(-20);
     speak(reply,'voiceOrb');
@@ -852,11 +852,11 @@ async function sendMessage(){
 function addMessage(r,t){const c=document.getElementById('chatMessages'),m=document.createElement('div');m.className=`msg ${r}`;m.innerHTML=`<div class="msg-label">${r==='nexa'?'Nexa OS':'You'}</div><div class="msg-bubble">${renderMarkdown(t)}</div>`;c.appendChild(m);c.scrollTop=c.scrollHeight;}
 function showTyping(){const c=document.getElementById('chatMessages'),w=document.createElement('div');w.className='msg nexa';w.innerHTML=`<div class="msg-label">Nexa OS</div><div class="typing"><span></span><span></span><span></span></div>`;c.appendChild(w);c.scrollTop=c.scrollHeight;return w;}
 
-// ══ PLAN WITH ALFRED ══
+// ══ PLAN WITH NEXA ══
 let planMessages=[];
 let pendingPlan=null;
 
-const PLAN_PERSONA=`You are ALFRED — Nexa OS goal architect. Your job is to have a focused conversation that extracts someone's massive goal and helps them break it down into milestones and daily actions.
+const PLAN_PERSONA=`You are NEXA — Nexa OS goal architect. Your job is to have a focused conversation that extracts someone's massive goal and helps them break it down into milestones and daily actions.
 
 Be conversational and sharp. Ask one or two questions at a time. Pull out:
 - The North Star (the one massive goal + target date)
@@ -878,7 +878,7 @@ function openPlan(){
   document.getElementById('planPreview').style.display='none';
   document.getElementById('planMessages').innerHTML='';
   document.getElementById('planOverlay').classList.add('open');
-  // Kick off with ALFRED's opener
+  // Kick off with NEXA's opener
   addPlanMsg('nexa',"Goal Architect mode active.\n\nTell me what you're building toward. Don't filter it — just say it. What's the life you're trying to get to?\n\nI'll help you turn it into a real plan with milestones and daily actions.");
 }
 
@@ -922,14 +922,14 @@ async function sendPlanMessage(){
 function addPlanMsg(role,text){
   const c=document.getElementById('planMessages'),m=document.createElement('div');
   m.className='msg '+role;
-  m.innerHTML=`<div class="msg-label">${role==='nexa'?'ALFRED':'You'}</div><div class="msg-bubble">${renderMarkdown(text)}</div>`;
+  m.innerHTML=`<div class="msg-label">${role==='nexa'?'NEXA':'You'}</div><div class="msg-bubble">${renderMarkdown(text)}</div>`;
   c.appendChild(m);c.scrollTop=c.scrollHeight;
 }
 
 function showPlanTyping(){
   const c=document.getElementById('planMessages'),w=document.createElement('div');
   w.className='msg nexa';
-  w.innerHTML='<div class="msg-label">ALFRED</div><div class="typing"><span></span><span></span><span></span></div>';
+  w.innerHTML='<div class="msg-label">NEXA</div><div class="typing"><span></span><span></span><span></span></div>';
   c.appendChild(w);c.scrollTop=c.scrollHeight;return w;
 }
 
