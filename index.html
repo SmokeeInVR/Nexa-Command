@@ -300,7 +300,9 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
     <input id="apiKeyInput" type="password" placeholder="sk-ant-api03-..." style="width:100%;background:rgba(0,0,0,0.5);border:1px solid #2a2a2a;border-radius:6px;padding:10px 12px;color:#fff;font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;margin-bottom:8px;box-sizing:border-box;">
     <div id="keyError" style="display:none;font-family:'Share Tech Mono',monospace;font-size:10px;color:#e05555;margin-bottom:8px;">⚠ Invalid key format</div>
     <button onclick="saveApiKey()" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(212,165,62,0.15),rgba(212,165,62,0.07));border:1px solid rgba(212,165,62,0.3);border-radius:8px;color:#D4A53E;font-family:Rajdhani,sans-serif;font-weight:700;font-size:13px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;">ACTIVATE SYSTEM</button>
-    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#444;margin-top:14px;text-align:center;">console.anthropic.com → API Keys</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#444;margin-top:14px;text-align:center;">console.anthropic.com &rarr; API Keys</div>
+    <div id="storedKeyHint" style="display:none;font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(212,165,62,0.4);margin-top:8px;text-align:center;"></div>
+    <button onclick="clearStoredKey()" style="display:block;margin:8px auto 0;background:none;border:none;font-family:'Share Tech Mono',monospace;font-size:9px;color:#333;cursor:pointer;letter-spacing:1px;">clear saved key</button>
   </div>
 </div>
 
@@ -833,9 +835,10 @@ function sendDirect(t){document.getElementById('chatInput').value=t;sendMessage(
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
 
 // ══ API KEY + CHAT ══
-let NEXAKEY=sessionStorage.getItem('nexa_api_key')||'';
-function showKeyModal(){document.getElementById('keyModal').style.display='flex';}
-function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v.startsWith('sk-')){document.getElementById('keyError').style.display='block';return;}NEXAKEY=v;sessionStorage.setItem('nexa_api_key',v);document.getElementById('keyModal').style.display='none';addMessage('nexa','API key accepted. System fully operational. Pulling live data from Nexa Finance now.');syncFinanceData();}
+let NEXAKEY=localStorage.getItem('nexa_api_key')||'';
+function showKeyModal(){document.getElementById('keyModal').style.display='flex';const stored=localStorage.getItem('nexa_api_key');const hint=document.getElementById('storedKeyHint');if(stored&&hint){hint.style.display='block';hint.textContent='Saved key: '+stored.slice(0,12)+'...';}}
+function clearStoredKey(){localStorage.removeItem('nexa_api_key');NEXAKEY='';const hint=document.getElementById('storedKeyHint');if(hint)hint.style.display='none';document.getElementById('apiKeyInput').value='';addMessage('nexa','API key cleared. Enter a new key to continue.');}
+function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v.startsWith('sk-')){document.getElementById('keyError').style.display='block';return;}NEXAKEY=v;localStorage.setItem('nexa_api_key',v);document.getElementById('keyModal').style.display='none';addMessage('nexa','API key accepted. System fully operational. Pulling live data from Nexa Finance now.');syncFinanceData();}
 let messages=[];
 async function sendMessage(){
   if(!NEXAKEY){showKeyModal();return;}
