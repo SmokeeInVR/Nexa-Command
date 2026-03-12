@@ -714,7 +714,7 @@ ${mc}`;
   messages.push({role:'user',content:prompt});
   const t=showTyping();
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:500,system:NEXA_PERSONA+liveFinanceContext,messages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,system:NEXA_PERSONA+liveFinanceContext,messages})});
     const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});
     speak(reply,'voiceOrb');
@@ -787,7 +787,7 @@ async function sendExplore(){
   if(!NEXAKEY){showKeyModal();return;}
   const inp=document.getElementById('exploreInput'),text=inp.value.trim();if(!text)return;inp.value='';inp.style.height='auto';
   addExploreMsg('user',text);exploreMessages.push({role:'user',content:text});const t=showExploreTyping();
-  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+NEXA_PERSONA+liveFinanceContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
+  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+NEXA_PERSONA+liveFinanceContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
   catch(e){t.remove();addExploreMsg('nexa','⚠ '+e.message);}
 }
 function addExploreMsg(r,t){const c=document.getElementById('exploreMessages'),m=document.createElement('div');m.className='msg '+r;m.innerHTML=`<div class="msg-label">${r==='nexa'?'Nexa OS':'You'}</div><div class="msg-bubble">${renderMarkdown(t)}</div>`;c.appendChild(m);c.scrollTop=c.scrollHeight;}
@@ -835,7 +835,7 @@ function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMe
 // ══ API KEY + CHAT ══
 let NEXAKEY=sessionStorage.getItem('nexa_api_key')||'';
 function showKeyModal(){document.getElementById('keyModal').style.display='flex';}
-function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v.startsWith('sk-ant-')){document.getElementById('keyError').style.display='block';return;}NEXAKEY=v;sessionStorage.setItem('nexa_api_key',v);document.getElementById('keyModal').style.display='none';addMessage('nexa','API key accepted. System fully operational. Pulling live data from Nexa Finance now.');syncFinanceData();}
+function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v.startsWith('sk-')){document.getElementById('keyError').style.display='block';return;}NEXAKEY=v;sessionStorage.setItem('nexa_api_key',v);document.getElementById('keyModal').style.display='none';addMessage('nexa','API key accepted. System fully operational. Pulling live data from Nexa Finance now.');syncFinanceData();}
 let messages=[];
 async function sendMessage(){
   if(!NEXAKEY){showKeyModal();return;}
@@ -843,7 +843,7 @@ async function sendMessage(){
   addMessage('user',text);messages.push({role:'user',content:text});const t=showTyping();
   try{
     const gc=northStar.goal?`\n\nNorth Star: "${northStar.goal}" (target: ${northStar.date||'none'}). Streak: ${streak.count} days.`:'';
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system:NEXA_PERSONA+liveFinanceContext+gc,messages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:NEXA_PERSONA+liveFinanceContext+gc,messages})});
     const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ API Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});if(messages.length>20)messages=messages.slice(-20);
     speak(reply,'voiceOrb');
@@ -896,7 +896,7 @@ async function sendPlanMessage(){
   const t=showPlanTyping();
   try{
     const sys=PLAN_PERSONA+(liveFinanceContext?'\n\nContext about their finances:'+liveFinanceContext:'');
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1200,system:sys,messages:planMessages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,system:sys,messages:planMessages})});
     const d=await r.json();
     if(!r.ok){t.remove();addPlanMsg('nexa','⚠ Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';
