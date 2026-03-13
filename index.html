@@ -664,6 +664,33 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 function save(k,v){try{localStorage.setItem("nexa_"+k,JSON.stringify(v));return;}catch(e){}try{sessionStorage.setItem("nexa_"+k,JSON.stringify(v));}catch(e){}}
 function load(k,d){try{const v=localStorage.getItem("nexa_"+k)||sessionStorage.getItem("nexa_"+k);return v?JSON.parse(v):d;}catch(e){return d;}}
 
+// Campaign cloud sync — saves to Railway so it works across all devices
+async function saveCampaignCloud(){
+  try{
+    await fetch(`${FINANCE_URL}/api/os/campaign`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({northStar,milestones,todayAction,streak})
+    });
+  }catch(e){console.warn('Cloud save failed, data saved locally only');}
+}
+
+async function loadCampaignCloud(){
+  try{
+    const res=await fetch(`${FINANCE_URL}/api/os/campaign`);
+    if(!res.ok)return;
+    const data=await res.json();
+    if(!data)return;
+    if(data.northStar)northStar=data.northStar;
+    if(data.milestones)milestones=data.milestones;
+    if(data.todayAction)todayAction=data.todayAction;
+    if(data.streak)streak=data.streak;
+    save('northStar',northStar);save('milestones',milestones);
+    save('todayAction',todayAction);save('streak',streak);
+    renderNorthStar();renderMilestones();renderTodayAction();
+  }catch(e){console.warn('Cloud load failed, using local data');}
+}
+
 // ══ VOICE ══
 let voiceEnabled=load('voice',false);
 function toggleVoice(){voiceEnabled=!voiceEnabled;save('voice',voiceEnabled);updateVoiceUI();if(!voiceEnabled)speechSynthesis.cancel();}
@@ -698,7 +725,7 @@ let todayAction=load('todayAction',{text:'',completed:false,date:''});
 function todayStr(){return new Date().toISOString().split('T')[0];}
 
 function openNsModal(){document.getElementById('nsGoalInput').value=northStar.goal;document.getElementById('nsDateInput').value=northStar.date;document.getElementById('nsModal').classList.add('open');}
-function saveNorthStar(){northStar.goal=document.getElementById('nsGoalInput').value.trim();northStar.date=document.getElementById('nsDateInput').value;save('northStar',northStar);closeModal('nsModal');renderNorthStar();}
+function saveNorthStar(){northStar.goal=document.getElementById('nsGoalInput').value.trim();northStar.date=document.getElementById('nsDateInput').value;save('northStar',northStar);saveCampaignCloud();closeModal('nsModal');renderNorthStar();}
 function getLevel(s){return s<7?1:s<14?2:s<21?3:s<30?4:s<45?5:s<60?6:s<90?7:s<120?8:s<180?9:10;}
 function getLevelThresholds(lv){const t=[0,7,14,21,30,45,60,90,120,180,999];return{min:t[lv-1],max:t[lv]};}
 function renderNorthStar(){
@@ -722,18 +749,18 @@ function saveMilestone(){
   const name=document.getElementById('msNameInput').value.trim();if(!name)return;
   if(editingMsIdx>=0)milestones[editingMsIdx].name=name;
   else milestones.push({id:Date.now(),name,actions:[]});
-  save('milestones',milestones);closeModal('msModal');renderMilestones();
+  save('milestones',milestones);saveCampaignCloud();closeModal('msModal');renderMilestones();
 }
-function deleteMilestone(i){if(!confirm('Delete this milestone?'))return;milestones.splice(i,1);save('milestones',milestones);renderMilestones();}
+function deleteMilestone(i){if(!confirm('Delete this milestone?'))return;milestones.splice(i,1);save('milestones',milestones);saveCampaignCloud();renderMilestones();}
 function toggleMs(i){const a=document.getElementById('msa-'+i),c=document.getElementById('msc-'+i);a.classList.toggle('open');c.classList.toggle('open');}
 function addAction(msI){
   const inp=document.getElementById('ai-'+msI),text=inp.value.trim();if(!text)return;
-  milestones[msI].actions.push({id:Date.now(),text,done:false});save('milestones',milestones);inp.value='';
+  milestones[msI].actions.push({id:Date.now(),text,done:false});save('milestones',milestones);saveCampaignCloud();inp.value='';
   renderMilestones();setTimeout(()=>{const a=document.getElementById('msa-'+msI),c=document.getElementById('msc-'+msI);if(a&&!a.classList.contains('open')){a.classList.add('open');c.classList.add('open');}},50);
 }
-function toggleAction(mi,ai){milestones[mi].actions[ai].done=!milestones[mi].actions[ai].done;save('milestones',milestones);renderMilestones();}
-function deleteAction(mi,ai){milestones[mi].actions.splice(ai,1);save('milestones',milestones);renderMilestones();}
-function setTodayAction(text){todayAction={text,completed:false,date:todayStr()};save('todayAction',todayAction);renderTodayAction();}
+function toggleAction(mi,ai){milestones[mi].actions[ai].done=!milestones[mi].actions[ai].done;save('milestones',milestones);saveCampaignCloud();renderMilestones();}
+function deleteAction(mi,ai){milestones[mi].actions.splice(ai,1);save('milestones',milestones);saveCampaignCloud();renderMilestones();}
+function setTodayAction(text){todayAction={text,completed:false,date:todayStr()};save('todayAction',todayAction);saveCampaignCloud();renderTodayAction();}
 
 function renderMilestones(){
   const c=document.getElementById('milestonesContainer');
@@ -794,6 +821,7 @@ function completeTodayAction(){
   const yest=new Date();yest.setDate(yest.getDate()-1);const yStr=yest.toISOString().split('T')[0];
   if(streak.lastDate===yStr)streak.count++;else if(streak.lastDate===todayStr()){}else streak.count=1;
   streak.lastDate=todayStr();streak.lastAction=todayAction.text;save('streak',streak);
+  saveCampaignCloud();
   const newLv=getLevel(streak.count);
   if(newLv>prevLv)triggerLevelUp(newLv);
   renderNorthStar();renderTodayAction();renderMilestones();
@@ -1070,23 +1098,20 @@ function showPlanPreview(plan){
 
 function savePlanToSystem(){
   if(!pendingPlan)return;
-  // Set North Star
   northStar.goal=pendingPlan.goal;
   northStar.date=pendingPlan.targetDate||'';
   save('northStar',northStar);
-  // Replace milestones (ask user first if they have existing ones)
   const existing=milestones.length>0;
   if(existing&&!confirm('You have existing milestones. Replace them with the new plan?'))return;
   milestones=pendingPlan.milestones.map(ms=>({id:Date.now()+Math.random(),name:ms.name,actions:ms.actions.map(a=>({id:Date.now()+Math.random(),text:a,done:false}))}));
   save('milestones',milestones);
-  // Close and refresh
+  saveCampaignCloud();
   closePlan();
   renderNorthStar();
   renderMilestones();
   renderTodayAction();
-  // Switch to status to see it
   switchPanel('goals',document.querySelectorAll('.nav-btn')[1]);
-  addMessage('nexa','✓ Plan locked in. Your North Star and milestones are set. Go to the **Status** tab to see your full roadmap — and pick your first daily action.');
+  addMessage('nexa','✓ Campaign locked in and synced to the cloud. Opens on any device automatically.');
 }
 
 function discardPlan(){
@@ -1095,7 +1120,7 @@ function discardPlan(){
   addPlanMsg('nexa','No problem. Keep going — tell me more and we\'ll refine it.');
 }
 
-window.addEventListener('load',()=>{updateVoiceUI();renderNorthStar();renderMilestones();renderTodayAction();syncFinanceData();});
+window.addEventListener('load',()=>{updateVoiceUI();renderNorthStar();renderMilestones();renderTodayAction();syncFinanceData();loadCampaignCloud();});
 </script>
 </body>
 </html>
