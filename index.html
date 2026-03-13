@@ -461,6 +461,9 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         <button class="hdr-btn" id="voiceBtn" onclick="toggleVoice()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="voiceIcon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
         </button>
+        <button class="hdr-btn" onclick="showKeyModal()" title="Set API Key">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        </button>
         <button class="hdr-btn" id="briefBtn" onclick="runMorningBriefing()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
           BRIEF
@@ -950,10 +953,12 @@ function sendDirect(t){document.getElementById('chatInput').value=t;sendMessage(
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
 
 // ══ API KEY + CHAT ══
-let NEXAKEY="";
-function showKeyModal(){document.getElementById('keyModal').style.display='flex';const stored=null;const hint=document.getElementById('storedKeyHint');if(stored&&hint){hint.style.display='block';hint.textContent='Saved key: '+stored.slice(0,12)+'...';}}
+function _loadKey(){try{return localStorage.getItem('nexa_key')||'';}catch(e){return sessionStorage.getItem('nexa_key')||'';}}
+function _saveKey(v){try{localStorage.setItem('nexa_key',v);}catch(e){sessionStorage.setItem('nexa_key',v);}}
+let NEXAKEY=_loadKey();
+function showKeyModal(){document.getElementById('keyModal').style.display='flex';const hint=document.getElementById('storedKeyHint');if(NEXAKEY&&hint){hint.style.display='block';hint.textContent='Active key: '+NEXAKEY.slice(0,16)+'...';}}
 function clearStoredKey(){NEXAKEY='';const hint=document.getElementById('storedKeyHint');if(hint)hint.style.display='none';document.getElementById('apiKeyInput').value='';addMessage('nexa','API key cleared. Enter a new key to continue.');}
-function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v.startsWith('sk-')){document.getElementById('keyError').style.display='block';return;}NEXAKEY=v;document.getElementById('keyModal').style.display='none';addMessage('nexa','System fully operational. Pulling live data from Nexa Finance now.');syncFinanceData();}
+function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v.startsWith('sk-')){document.getElementById('keyError').style.display='block';return;}NEXAKEY=v;_saveKey(v);document.getElementById('keyModal').style.display='none';addMessage('nexa','System fully operational. Pulling live data from Nexa Finance now.');syncFinanceData();}
 let messages=[];
 async function sendMessage(){
   if(!NEXAKEY){showKeyModal();return;}
