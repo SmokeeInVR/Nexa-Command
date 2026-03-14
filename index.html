@@ -1025,8 +1025,23 @@ function renderMilestones(){
   renderCharacterStats();
 }
 
-// Check quest without collapsing the open boss fight
-function toggleTierQuestKeepOpen(msI,tI,qI,keepOpenId){
+// Render milestones while preserving which cards and tiers are open
+function renderMilestonesKeepOpen(){
+  // Snapshot open state before re-render
+  const openBosses=new Set();
+  document.querySelectorAll('.boss-quests.open').forEach(el=>openBosses.add(el.id));
+  const openTierKeys=new Set();
+  document.querySelectorAll('.tier-quests.open').forEach(el=>openTierKeys.add(el.dataset.tierKey||''));
+  renderMilestones();
+  // Restore open boss fights
+  openBosses.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.add('open');
+    const idx=id.replace('msa-','');
+    const chev=document.getElementById('msc-'+idx);
+    if(chev)chev.classList.add('open');
+  });
+}msI,tI,qI,keepOpenId){
   milestones[msI]=migrateMilestoneToTiers(milestones[msI]);
   const q=milestones[msI].tiers[tI].quests[qI];
   q.done=!q.done;
@@ -1411,7 +1426,7 @@ function addTier(msI){
   milestones[msI].tiers.push({name:'Tier '+tierNum,quests:[]});
   save('milestones',milestones);
   saveCampaignCloud();
-  renderMilestones();
+  renderMilestonesKeepOpen();
 }
 
 function isTierUnlocked(ms,tierIdx){
@@ -1441,7 +1456,7 @@ function deleteTierQuest(msI,tI,qI){
   milestones[msI].tiers[tI].quests.splice(qI,1);
   save('milestones',milestones);
   saveCampaignCloud();
-  renderMilestones();
+  renderMilestonesKeepOpen();
 }
 
 function addTierQuest(msI,tI){
@@ -1453,7 +1468,7 @@ function addTierQuest(msI,tI){
   inp.value='';
   save('milestones',milestones);
   saveCampaignCloud();
-  renderMilestones();
+  renderMilestonesKeepOpen();
 }
 
 function setTodayFromTier(msI,tI,text){
