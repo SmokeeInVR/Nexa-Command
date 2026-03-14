@@ -1444,10 +1444,19 @@ async function sendPlanMessage(){
       const before=parts[0].trim();
       if(before)addPlanMsg('nexa',before);
       try{
-        const json=parts[1].trim();
-        pendingPlan=JSON.parse(json);
+        let jsonStr=parts[1].trim();
+        // Find the JSON object — it starts with { and ends with the last }
+        const start=jsonStr.indexOf('{');
+        const end=jsonStr.lastIndexOf('}');
+        if(start!==-1&&end!==-1){
+          jsonStr=jsonStr.slice(start,end+1);
+        }
+        pendingPlan=JSON.parse(jsonStr);
         showPlanPreview(pendingPlan);
-      }catch(e){addPlanMsg('nexa',reply);}
+      }catch(e){
+        console.error('Plan JSON parse error:',e);
+        addPlanMsg('nexa',parts[1]||reply);
+      }
     } else {
       addPlanMsg('nexa',reply);
     }
@@ -1473,11 +1482,21 @@ function showPlanTyping(){
 function showPlanPreview(plan){
   document.getElementById('planPreviewGoal').textContent=plan.goal+(plan.targetDate?' — Target: '+new Date(plan.targetDate+'T00:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'}):'');
   const msEl=document.getElementById('planPreviewMilestones');
-  msEl.innerHTML=plan.milestones.map((ms,i)=>`
-    <div style="margin-bottom:8px;">
-      <div class="plan-preview-ms" style="color:var(--text-bright);font-size:11px;margin-bottom:3px;">${i+1}. ${escH(ms.name)}</div>
-      ${ms.actions.map(a=>`<div class="plan-preview-ms" style="margin-left:12px;">· ${escH(a)}</div>`).join('')}
-    </div>`).join('');
+  msEl.innerHTML=plan.milestones.map((ms,i)=>{
+    // Handle both tiered and flat formats
+    let questLines='';
+    if(ms.tiers&&ms.tiers.length){
+      questLines=ms.tiers.map((t,ti)=>`<div class="plan-preview-ms" style="margin-left:8px;color:var(--gold-dim);">Tier ${ti+1}: ${escH(t.name||'')}</div>`+
+        (t.quests||[]).slice(0,2).map(q=>`<div class="plan-preview-ms" style="margin-left:20px;">· ${escH(typeof q==='string'?q:q.text)}</div>`).join('')
+      ).join('');
+    } else if(ms.actions){
+      questLines=(ms.actions||[]).slice(0,3).map(a=>`<div class="plan-preview-ms" style="margin-left:12px;">· ${escH(a)}</div>`).join('');
+    }
+    return `<div style="margin-bottom:10px;">
+      <div class="plan-preview-ms" style="color:var(--text-bright);font-size:12px;font-weight:700;margin-bottom:4px;">${i+1}. ${escH(ms.name)}</div>
+      ${questLines}
+    </div>`;
+  }).join('');
   document.getElementById('planPreview').style.display='block';
   document.getElementById('planMessages').scrollTop=document.getElementById('planMessages').scrollHeight;
 }
