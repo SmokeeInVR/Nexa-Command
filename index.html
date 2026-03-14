@@ -1407,7 +1407,9 @@ When you have enough information, output EXACTLY this JSON block (no markdown fe
 PLAN_JSON:
 {"goal":"...","targetDate":"YYYY-MM-DD or empty","milestones":[{"name":"...","tiers":[{"name":"Tier 1 — Foundation","quests":[{"id":1,"text":"...","done":false}]},{"name":"Tier 2 — Development","quests":[{"id":2,"text":"...","done":false}]},{"name":"Tier 3 — Mastery","quests":[{"id":3,"text":"...","done":false}]}]}]}
 
-Before generating the JSON, briefly summarize the plan in one sentence and say you're ready to lock it in.`;
+Before generating the JSON, briefly summarize the plan in one sentence and say you're ready to lock it in.
+
+CRITICAL: You MUST start the JSON line with exactly "PLAN_JSON:" on its own line before the JSON. No markdown, no backticks, no extra formatting. The line must be literally: PLAN_JSON: followed immediately by the JSON object.`;
 
 function openPlan(){
   if(!NEXAKEY){showKeyModal();return;}
@@ -1433,19 +1435,30 @@ async function sendPlanMessage(){
   const t=showPlanTyping();
   try{
     const sys=PLAN_PERSONA+(liveFinanceContext?'\n\nContext about their finances:'+liveFinanceContext:'');
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,system:sys,messages:planMessages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,system:sys,messages:planMessages})});
     const d=await r.json();
     if(!r.ok){t.remove();addPlanMsg('nexa','⚠ Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';
     t.remove();
-    // Check for PLAN_JSON
-    if(reply.includes('PLAN_JSON:')){
-      const parts=reply.split('PLAN_JSON:');
-      const before=parts[0].trim();
+    // Check for PLAN_JSON — handle both prefixed and raw JSON output
+    const hasPlanPrefix=reply.includes('PLAN_JSON:');
+    const hasRawJson=reply.includes('"goal"')&&reply.includes('"milestones"')&&reply.includes('"tiers"');
+    if(hasPlanPrefix||hasRawJson){
+      let jsonStr='';
+      let before='';
+      if(hasPlanPrefix){
+        const parts=reply.split('PLAN_JSON:');
+        before=parts[0].trim();
+        jsonStr=parts[1]||'';
+      } else {
+        // Raw JSON — find the text before and extract the JSON block
+        const jsonStart=reply.indexOf('{');
+        before=jsonStart>0?reply.slice(0,jsonStart).trim():'';
+        jsonStr=reply.slice(jsonStart);
+      }
       if(before)addPlanMsg('nexa',before);
       try{
-        let jsonStr=parts[1].trim();
-        // Find the JSON object — it starts with { and ends with the last }
+        // Extract just the outermost JSON object
         const start=jsonStr.indexOf('{');
         const end=jsonStr.lastIndexOf('}');
         if(start!==-1&&end!==-1){
@@ -1455,7 +1468,8 @@ async function sendPlanMessage(){
         showPlanPreview(pendingPlan);
       }catch(e){
         console.error('Plan JSON parse error:',e);
-        addPlanMsg('nexa',parts[1]||reply);
+        // Show a clean message instead of raw JSON
+        addPlanMsg('nexa','Plan generated. Tap the preview card above to review and save.');
       }
     } else {
       addPlanMsg('nexa',reply);
