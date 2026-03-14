@@ -408,7 +408,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 .tag-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
 .tag-pick-btn{padding:4px 12px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;border:1px solid var(--border);background:none;color:var(--text-dim);transition:all 0.2s;}
 .tag-pick-btn.selected{border-color:var(--gold);color:var(--gold);background:rgba(212,165,62,0.1);}
-display:none;position:fixed;inset:0;background:var(--bg);z-index:600;flex-direction:column;}
+.plan-overlay{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:100%;background:var(--bg);z-index:600;flex-direction:column;}
 .plan-overlay.open{display:flex;}
 .plan-header{padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(10,10,10,0.97);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .plan-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--text-bright);letter-spacing:3px;}
@@ -463,7 +463,7 @@ display:none;position:fixed;inset:0;background:var(--bg);z-index:600;flex-direct
   </div>
 </div>
 
-<!-- PLAN OVERLAY -->
+<!-- PLAN OVERLAY — inside app for proper containment -->
 <div class="plan-overlay" id="planOverlay">
   <div class="plan-header">
     <div>
@@ -491,6 +491,7 @@ display:none;position:fixed;inset:0;background:var(--bg);z-index:600;flex-direct
     </div>
   </div>
 </div>
+<!-- END PLAN OVERLAY -->
 
 <!-- CODEX ADD MODAL -->
 <div class="quick-add-modal" id="codexModal">
