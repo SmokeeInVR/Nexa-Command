@@ -347,8 +347,68 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 .modal-save{flex:1;padding:11px;background:linear-gradient(135deg,rgba(212,165,62,0.15),rgba(212,165,62,0.07));border:1px solid var(--border-gold);border-radius:8px;color:var(--gold);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;cursor:pointer;}
 .modal-cancel{padding:11px 16px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);font-family:'Rajdhani',sans-serif;font-size:13px;cursor:pointer;}
 
-/* PLAN OVERLAY */
-.plan-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:600;flex-direction:column;}
+/* ══ PROGRESSIVE QUEST TIERS ══ */
+.tier-block{margin-bottom:8px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.tier-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(0,0,0,0.3);cursor:pointer;}
+.tier-locked{opacity:0.45;pointer-events:none;}
+.tier-num{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);flex-shrink:0;width:20px;}
+.tier-title{flex:1;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;}
+.tier-locked .tier-title{color:var(--text-dim);}
+.tier-status{font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;letter-spacing:1px;}
+.tier-status-done{background:rgba(92,184,92,0.12);color:var(--success);border:1px solid rgba(92,184,92,0.25);}
+.tier-status-active{background:rgba(212,165,62,0.1);color:var(--gold);border:1px solid var(--border-gold);}
+.tier-status-locked{background:rgba(255,255,255,0.03);color:var(--text-dim);border:1px solid var(--border);}
+.tier-quests{padding:8px 12px;display:none;}
+.tier-quests.open{display:block;}
+.tier-complete-flash{position:fixed;inset:0;background:rgba(92,184,92,0.08);z-index:9998;pointer-events:none;animation:tierFlash 0.8s ease forwards;}
+@keyframes tierFlash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
+
+/* ══ CODEX ══ */
+.codex-entry{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;position:relative;}
+.codex-entry-cat{display:inline-flex;align-items:center;gap:4px;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 7px;border-radius:3px;margin-bottom:6px;}
+.codex-entry-text{font-size:13px;color:var(--text);line-height:1.5;}
+.codex-entry-date{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);margin-top:5px;}
+.codex-entry-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;opacity:0.4;}
+.codex-entry-del:hover{opacity:1;color:var(--warn);}
+.cat-house{background:rgba(91,155,213,0.1);color:#5b9bd5;border:1px solid rgba(91,155,213,0.2);}
+.cat-trading{background:rgba(92,184,92,0.1);color:var(--success);border:1px solid rgba(92,184,92,0.2);}
+.cat-finance{background:rgba(212,165,62,0.1);color:var(--gold);border:1px solid var(--border-gold);}
+.cat-business{background:rgba(155,91,213,0.1);color:#9b5bd5;border:1px solid rgba(155,91,213,0.2);}
+.cat-ecosystem{background:rgba(213,155,91,0.1);color:#d59b5b;border:1px solid rgba(213,155,91,0.2);}
+.cat-general{background:rgba(255,255,255,0.05);color:var(--text-dim);border:1px solid var(--border);}
+
+/* ══ IDEA STASH ══ */
+.idea-item{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;position:relative;}
+.idea-title{font-size:14px;font-weight:600;color:var(--text-bright);margin-bottom:4px;}
+.idea-body{font-size:13px;color:var(--text);line-height:1.4;}
+.idea-meta{display:flex;align-items:center;gap:8px;margin-top:6px;}
+.idea-tag{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 7px;border-radius:3px;text-transform:uppercase;}
+.idea-date{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);}
+.idea-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;opacity:0.4;}
+.idea-del:hover{opacity:1;color:var(--warn);}
+.tag-app{background:rgba(91,155,213,0.1);color:#5b9bd5;border:1px solid rgba(91,155,213,0.2);}
+.tag-business{background:rgba(212,165,62,0.1);color:var(--gold);border:1px solid var(--border-gold);}
+.tag-personal{background:rgba(92,184,92,0.1);color:var(--success);border:1px solid rgba(92,184,92,0.2);}
+.tag-finance{background:rgba(224,85,85,0.1);color:var(--warn);border:1px solid rgba(224,85,85,0.2);}
+.tag-random{background:rgba(255,255,255,0.05);color:var(--text-dim);border:1px solid var(--border);}
+
+/* ══ COLLAPSIBLE SECTIONS ══ */
+.goals-section{margin-bottom:4px;}
+.goals-section-header{display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;user-select:none;}
+.goals-section-toggle{font-size:11px;color:var(--text-dim);transition:transform 0.2s;}
+.goals-section-toggle.open{transform:rotate(90deg);}
+.goals-section-body{display:none;}
+.goals-section-body.open{display:block;}
+
+/* ADD ENTRY MODAL */
+.quick-add-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:700;align-items:flex-end;justify-content:center;}
+.quick-add-modal.open{display:flex;}
+.quick-add-sheet{background:#111;border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:14px 14px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;}
+.quick-add-title{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--text-bright);letter-spacing:3px;margin-bottom:16px;}
+.tag-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.tag-pick-btn{padding:4px 12px;border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;border:1px solid var(--border);background:none;color:var(--text-dim);transition:all 0.2s;}
+.tag-pick-btn.selected{border-color:var(--gold);color:var(--gold);background:rgba(212,165,62,0.1);}
+display:none;position:fixed;inset:0;background:var(--bg);z-index:600;flex-direction:column;}
 .plan-overlay.open{display:flex;}
 .plan-header{padding:14px 18px;border-bottom:1px solid var(--border);background:rgba(10,10,10,0.97);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .plan-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--text-bright);letter-spacing:3px;}
@@ -432,7 +492,53 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
   </div>
 </div>
 
+<!-- CODEX ADD MODAL -->
+<div class="quick-add-modal" id="codexModal">
+  <div class="quick-add-sheet">
+    <div class="quick-add-title">📖 ADD TO CODEX</div>
+    <div class="modal-label">Category</div>
+    <div class="tag-picker" id="codexCatPicker">
+      <button class="tag-pick-btn selected" data-val="house" onclick="pickCodexCat(this)">🏡 House</button>
+      <button class="tag-pick-btn" data-val="trading" onclick="pickCodexCat(this)">📈 Trading</button>
+      <button class="tag-pick-btn" data-val="finance" onclick="pickCodexCat(this)">💰 Finance</button>
+      <button class="tag-pick-btn" data-val="business" onclick="pickCodexCat(this)">⚙️ Business</button>
+      <button class="tag-pick-btn" data-val="ecosystem" onclick="pickCodexCat(this)">⚡ Ecosystem</button>
+      <button class="tag-pick-btn" data-val="general" onclick="pickCodexCat(this)">🧠 General</button>
+    </div>
+    <div class="modal-label">Note</div>
+    <textarea class="modal-textarea" id="codexNoteInput" placeholder="What did you learn, find, or want to remember?"></textarea>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeCodexModal()">Cancel</button>
+      <button class="modal-save" onclick="saveCodexEntry()">SAVE TO CODEX</button>
+    </div>
+  </div>
+</div>
+
+<!-- IDEA STASH MODAL -->
+<div class="quick-add-modal" id="ideaModal">
+  <div class="quick-add-sheet">
+    <div class="quick-add-title">💡 STASH AN IDEA</div>
+    <div class="modal-label">Title</div>
+    <input class="modal-input" id="ideaTitleInput" placeholder="One line summary...">
+    <div class="modal-label">The Idea</div>
+    <textarea class="modal-textarea" id="ideaBodyInput" placeholder="Describe it — enough that future you remembers why it was exciting..."></textarea>
+    <div class="modal-label">Tag</div>
+    <div class="tag-picker" id="ideaTagPicker">
+      <button class="tag-pick-btn selected" data-val="app" onclick="pickIdeaTag(this)">App</button>
+      <button class="tag-pick-btn" data-val="business" onclick="pickIdeaTag(this)">Business</button>
+      <button class="tag-pick-btn" data-val="personal" onclick="pickIdeaTag(this)">Personal</button>
+      <button class="tag-pick-btn" data-val="finance" onclick="pickIdeaTag(this)">Finance</button>
+      <button class="tag-pick-btn" data-val="random" onclick="pickIdeaTag(this)">Random</button>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeIdeaModal()">Cancel</button>
+      <button class="modal-save" onclick="saveIdeaEntry()">STASH IT</button>
+    </div>
+  </div>
+</div>
+
 <!-- MILESTONE MODAL -->
+
 <div class="modal-overlay" id="msModal">
   <div class="modal-sheet">
     <div class="modal-title">BOSS FIGHT</div>
@@ -584,6 +690,31 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         <button class="add-milestone-btn" style="flex:1.4;border-color:var(--border-gold);color:var(--gold);" onclick="openPlan()">✦ Start Campaign</button>
       </div>
 
+      <!-- CODEX -->
+      <div style="height:16px;"></div>
+      <div class="goals-section">
+        <div class="goals-section-header" onclick="toggleSection('codex')">
+          <div class="section-label" style="margin-bottom:0;">📖 Codex <span style="font-size:9px;color:var(--text-dim);margin-left:6px;" id="codexCount"></span></div>
+          <span class="goals-section-toggle" id="codexToggle">›</span>
+        </div>
+        <div class="goals-section-body" id="codexBody">
+          <button class="add-milestone-btn" style="margin-bottom:8px;border-color:rgba(91,155,213,0.3);color:#5b9bd5;" onclick="openCodexModal()">+ Add Codex Entry</button>
+          <div id="codexContainer"><div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:12px 0;">No entries yet. Log what you learn.</div></div>
+        </div>
+      </div>
+
+      <!-- IDEA STASH -->
+      <div class="goals-section">
+        <div class="goals-section-header" onclick="toggleSection('ideas')">
+          <div class="section-label" style="margin-bottom:0;">💡 Idea Stash <span style="font-size:9px;color:var(--text-dim);margin-left:6px;" id="ideaCount"></span></div>
+          <span class="goals-section-toggle" id="ideasToggle">›</span>
+        </div>
+        <div class="goals-section-body" id="ideasBody">
+          <button class="add-milestone-btn" style="margin-bottom:8px;border-color:rgba(212,165,62,0.3);color:var(--gold);" onclick="openIdeaModal()">+ Stash an Idea</button>
+          <div id="ideaContainer"><div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:12px 0;">No ideas stashed yet. Don't lose them.</div></div>
+        </div>
+      </div>
+
       <div style="height:24px;"></div>
     </div>
   </div>
@@ -670,7 +801,7 @@ async function saveCampaignCloud(){
     await fetch(`${FINANCE_URL}/api/os/campaign`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({northStar,milestones,todayAction,streak})
+      body:JSON.stringify({northStar,milestones,todayAction,streak,codex,ideas})
     });
   }catch(e){console.warn('Cloud save failed, data saved locally only');}
 }
@@ -685,9 +816,12 @@ async function loadCampaignCloud(){
     if(data.milestones)milestones=data.milestones;
     if(data.todayAction)todayAction=data.todayAction;
     if(data.streak)streak=data.streak;
+    if(data.codex)codex=data.codex;
+    if(data.ideas)ideas=data.ideas;
     save('northStar',northStar);save('milestones',milestones);
     save('todayAction',todayAction);save('streak',streak);
-    renderNorthStar();renderMilestones();renderTodayAction();
+    save('codex',codex);save('ideas',ideas);
+    renderNorthStar();renderMilestones();renderTodayAction();renderCodex();renderIdeas();
   }catch(e){console.warn('Cloud load failed, using local data');}
 }
 
@@ -766,19 +900,45 @@ function renderMilestones(){
   const c=document.getElementById('milestonesContainer');
   if(!milestones.length){c.innerHTML=`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:14px 0;border:1px dashed var(--border);border-radius:8px;">No boss fights yet. Add one or Start Campaign.</div>`;return;}
   const bossIcons=['👹','💀','🐲','👿','🦂','🔱','⚡','🌑','💣','🗡'];
-  c.innerHTML=milestones.map((ms,i)=>{
-    const done=ms.actions.filter(a=>a.done).length,total=ms.actions.length;
-    const defeated=done===total&&total>0;
-    const hp=total>0?Math.round(((total-done)/total)*100):100;
+  c.innerHTML=milestones.map((msRaw,i)=>{
+    const ms=migrateMilestoneToTiers(msRaw);
+    const tiers=ms.tiers||[];
+    // Compute total quests and done
+    const totalQ=tiers.reduce((a,t)=>a+t.quests.length,0);
+    const doneQ=tiers.reduce((a,t)=>a+t.quests.filter(q=>q.done).length,0);
+    const defeated=doneQ===totalQ&&totalQ>0;
+    const hp=totalQ>0?Math.round(((totalQ-doneQ)/totalQ)*100):100;
     const hpClass=hp>60?'boss-hp-full':hp>30?'boss-hp-mid':'boss-hp-low';
     const icon=bossIcons[i%bossIcons.length];
-    const quests=ms.actions.map((a,ai)=>`
-      <div class="boss-quest-item">
-        <div class="bq-check ${a.done?'done':''}" onclick="toggleAction(${i},${ai})">${a.done?'✓':''}</div>
-        <div class="bq-text ${a.done?'done':''}">${escH(a.text)}</div>
-        ${!a.done?`<button class="bq-assign" onclick="setTodayAction('${escA(a.text)}')">⚡ Assign</button>`:''}
-        <button class="bq-del" onclick="deleteAction(${i},${ai})">✕</button>
-      </div>`).join('');
+
+    const tiersHtml=tiers.map((tier,tI)=>{
+      const unlocked=isTierUnlocked(ms,tI);
+      const tierDone=tier.quests.length>0&&tier.quests.every(q=>q.done);
+      const tierStatus=tierDone?'tier-status-done':unlocked?'tier-status-active':'tier-status-locked';
+      const tierStatusLabel=tierDone?'✓ Done':unlocked?'Active':'🔒 Locked';
+      const questsHtml=tier.quests.map((q,qI)=>`
+        <div class="boss-quest-item">
+          <div class="bq-check ${q.done?'done':''}" onclick="toggleTierQuest(${i},${tI},${qI})">${q.done?'✓':''}</div>
+          <div class="bq-text ${q.done?'done':''}">${escH(q.text)}</div>
+          ${!q.done&&unlocked?`<button class="bq-assign" onclick="setTodayFromTier(${i},${tI},'${escA(q.text)}')">⚡ Assign</button>`:''}
+          <button class="bq-del" onclick="deleteTierQuest(${i},${tI},${qI})">✕</button>
+        </div>`).join('');
+      return `<div class="tier-block ${!unlocked?'tier-locked':''}">
+        <div class="tier-header" onclick="${unlocked?`toggleTierInline(this)`:''}">
+          <div class="tier-num">T${tI+1}</div>
+          <div class="tier-title">${escH(tier.name)} <span style="color:var(--text-dim);font-size:8px;">(${tier.quests.filter(q=>q.done).length}/${tier.quests.length})</span></div>
+          <span class="tier-status ${tierStatus}">${tierStatusLabel}</span>
+        </div>
+        <div class="tier-quests" style="${!unlocked?'display:none':''}">
+          ${questsHtml}
+          ${unlocked?`<div class="add-quest-row">
+            <input class="add-quest-input" id="tqi-${i}-${tI}" placeholder="Add quest to this tier..." onkeydown="if(event.key==='Enter')addTierQuest(${i},${tI})">
+            <button class="add-quest-btn" onclick="addTierQuest(${i},${tI})">+</button>
+          </div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
     return `<div class="boss-fight-card ${defeated?'defeated':'active'}" id="ms-${i}">
       <div class="boss-fight-header" onclick="toggleMs(${i})">
         <div class="boss-fight-icon">${defeated?'✅':icon}</div>
@@ -786,25 +946,27 @@ function renderMilestones(){
           <div class="boss-fight-name">${escH(ms.name)}</div>
           <div class="boss-hp-row">
             <div class="boss-hp-bar-bg"><div class="boss-hp-bar-fill ${hpClass}" style="width:${defeated?0:hp}%"></div></div>
-            <div class="boss-hp-label">${defeated?'DEFEATED':hp+'% HP'}</div>
+            <div class="boss-hp-label">${defeated?'✅ DEFEATED':hp+'% HP'}</div>
           </div>
         </div>
         <span class="boss-chev" id="msc-${i}">›</span>
       </div>
       <div class="boss-quests" id="msa-${i}">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(224,85,85,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Daily Quests (${done}/${total} complete)</div>
-        ${quests}
-        <div class="add-quest-row">
-          <input class="add-quest-input" id="ai-${i}" placeholder="Add daily quest..." onkeydown="if(event.key==='Enter')addAction(${i})">
-          <button class="add-quest-btn" onclick="addAction(${i})">+</button>
-        </div>
-        <div class="boss-footer-btns">
-          <button class="boss-footer-btn edit" onclick="openMsModal(${i})">Edit</button>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(224,85,85,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Quest Tiers (${doneQ}/${totalQ} complete)</div>
+        ${tiersHtml}
+        <div class="boss-footer-btns" style="margin-top:8px;">
+          <button class="boss-footer-btn edit" onclick="addTier(${i})" style="border-color:var(--border-gold);color:var(--gold);">+ Add Tier</button>
+          <button class="boss-footer-btn edit" onclick="openMsModal(${i})">Edit Name</button>
           <button class="boss-footer-btn del" onclick="deleteMilestone(${i})">Delete</button>
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleTierInline(header){
+  const quests=header.nextElementSibling;
+  quests.style.display=quests.style.display==='none'?'block':'none';
 }
 
 function renderTodayAction(){
@@ -837,7 +999,11 @@ async function askNexaForAction(){
   if(!NEXAKEY){showKeyModal();return;}
   switchPanel('command',document.querySelector('.nav-btn'));
   const gc=northStar.goal?`North Star: "${northStar.goal}"`:'No North Star set.';
-  const mc=milestones.length?milestones.map((m,i)=>`${i+1}. ${m.name}: open actions — ${m.actions.filter(a=>!a.done).map(a=>a.text).join(', ')||'none'}`).join('; '):'No milestones.';
+  const mc=milestones.length?milestones.map((m,i)=>{
+    const openTier=(m.tiers||[]).find(t=>t.quests.some(q=>!q.done));
+    const openQ=openTier?openTier.quests.filter(q=>!q.done).map(q=>q.text).join(', '):'none';
+    return `${i+1}. ${m.name}: current tier open quests — ${openQ}`;
+  }).join('; '):'No milestones.';
   sendDirect(`Based on my current financial situation and goals, what should my single most important action be today?\n\n${gc}\n${mc}`);
 }
 
@@ -846,7 +1012,8 @@ async function runMorningBriefing(){
   if(!NEXAKEY){showKeyModal();return;}
   switchPanel('command',document.querySelector('.nav-btn'));
   const gc=northStar.goal?`North Star: "${northStar.goal}" (target: ${northStar.date||'none'})`:'No North Star set.';
-  const mc=milestones.length?milestones.map((m,i)=>`Milestone ${i+1}: ${m.name} — ${m.actions.filter(a=>!a.done).length} open actions`).join(', '):'No milestones.';
+  const mc=milestones.length?milestones.map((m,i)=>`Milestone ${i+1}: ${m.name} — ${(m.tiers||[]).reduce((a,t)=>a+t.quests.filter(q=>!q.done).length,0)} open quests`).join(', '):'No milestones.';
+  const codexCtx=codex.length?'\n\nCodex (recent knowledge):\n'+codex.slice(0,5).map(e=>`[${e.cat}] ${e.note}`).join('\n'):'';
   const prompt=`Good morning. Give me my daily briefing. Be sharp, direct, personal. No generic motivational fluff.
 
 Include:
@@ -857,7 +1024,7 @@ Include:
 5. One line to send me into the day
 
 ${gc}
-${mc}`;
+${mc}${codexCtx}`;
   addMessage('user','🌅 Morning Briefing');
   messages.push({role:'user',content:prompt});
   const t=showTyping();
@@ -1003,23 +1170,226 @@ async function sendMessage(){
 function addMessage(r,t){const c=document.getElementById('chatMessages'),m=document.createElement('div');m.className=`msg ${r}`;m.innerHTML=`<div class="msg-label">${r==='nexa'?'Nexa OS':'You'}</div><div class="msg-bubble">${renderMarkdown(t)}</div>`;c.appendChild(m);c.scrollTop=c.scrollHeight;}
 function showTyping(){const c=document.getElementById('chatMessages'),w=document.createElement('div');w.className='msg nexa';w.innerHTML=`<div class="msg-label">Nexa OS</div><div class="typing"><span></span><span></span><span></span></div>`;c.appendChild(w);c.scrollTop=c.scrollHeight;return w;}
 
+// ══ SECTION TOGGLE ══
+function toggleSection(id){
+  const body=document.getElementById(id+'Body');
+  const toggle=document.getElementById(id+'Toggle');
+  body.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+
+// ══ CODEX ══
+let codex=load('codex',[]);
+let codexCat='house';
+
+function openCodexModal(){
+  document.getElementById('codexNoteInput').value='';
+  codexCat='house';
+  document.querySelectorAll('#codexCatPicker .tag-pick-btn').forEach(b=>b.classList.toggle('selected',b.dataset.val==='house'));
+  document.getElementById('codexModal').classList.add('open');
+  setTimeout(()=>document.getElementById('codexNoteInput').focus(),100);
+}
+function closeCodexModal(){document.getElementById('codexModal').classList.remove('open');}
+function pickCodexCat(btn){
+  codexCat=btn.dataset.val;
+  document.querySelectorAll('#codexCatPicker .tag-pick-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function saveCodexEntry(){
+  const note=document.getElementById('codexNoteInput').value.trim();
+  if(!note)return;
+  codex.unshift({id:Date.now(),cat:codexCat,note,date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})});
+  save('codex',codex);
+  saveCampaignCloud();
+  closeCodexModal();
+  renderCodex();
+  // Open the section if not open
+  const body=document.getElementById('codexBody');
+  if(!body.classList.contains('open'))toggleSection('codex');
+}
+function deleteCodexEntry(id){
+  codex=codex.filter(e=>e.id!==id);
+  save('codex',codex);
+  saveCampaignCloud();
+  renderCodex();
+}
+const codexCatInfo={
+  house:{label:'🏡 House',cls:'cat-house'},
+  trading:{label:'📈 Trading',cls:'cat-trading'},
+  finance:{label:'💰 Finance',cls:'cat-finance'},
+  business:{label:'⚙️ Business',cls:'cat-business'},
+  ecosystem:{label:'⚡ Ecosystem',cls:'cat-ecosystem'},
+  general:{label:'🧠 General',cls:'cat-general'},
+};
+function renderCodex(){
+  const c=document.getElementById('codexContainer');
+  const cnt=document.getElementById('codexCount');
+  if(cnt)cnt.textContent=codex.length?`(${codex.length})`:'';
+  if(!codex.length){c.innerHTML=`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:12px 0;">No entries yet. Log what you learn.</div>`;return;}
+  c.innerHTML=codex.map(e=>{
+    const info=codexCatInfo[e.cat]||codexCatInfo.general;
+    return `<div class="codex-entry">
+      <button class="codex-entry-del" onclick="deleteCodexEntry(${e.id})">✕</button>
+      <div class="codex-entry-cat ${info.cls}">${info.label}</div>
+      <div class="codex-entry-text">${escH(e.note)}</div>
+      <div class="codex-entry-date">${e.date}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══ IDEA STASH ══
+let ideas=load('ideas',[]);
+let ideaTag='app';
+
+function openIdeaModal(){
+  document.getElementById('ideaTitleInput').value='';
+  document.getElementById('ideaBodyInput').value='';
+  ideaTag='app';
+  document.querySelectorAll('#ideaTagPicker .tag-pick-btn').forEach(b=>b.classList.toggle('selected',b.dataset.val==='app'));
+  document.getElementById('ideaModal').classList.add('open');
+  setTimeout(()=>document.getElementById('ideaTitleInput').focus(),100);
+}
+function closeIdeaModal(){document.getElementById('ideaModal').classList.remove('open');}
+function pickIdeaTag(btn){
+  ideaTag=btn.dataset.val;
+  document.querySelectorAll('#ideaTagPicker .tag-pick-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function saveIdeaEntry(){
+  const title=document.getElementById('ideaTitleInput').value.trim();
+  const body=document.getElementById('ideaBodyInput').value.trim();
+  if(!title)return;
+  ideas.unshift({id:Date.now(),title,body,tag:ideaTag,date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})});
+  save('ideas',ideas);
+  saveCampaignCloud();
+  closeIdeaModal();
+  renderIdeas();
+  const b=document.getElementById('ideasBody');
+  if(!b.classList.contains('open'))toggleSection('ideas');
+}
+function deleteIdeaEntry(id){
+  ideas=ideas.filter(e=>e.id!==id);
+  save('ideas',ideas);
+  saveCampaignCloud();
+  renderIdeas();
+}
+function renderIdeas(){
+  const c=document.getElementById('ideaContainer');
+  const cnt=document.getElementById('ideaCount');
+  if(cnt)cnt.textContent=ideas.length?`(${ideas.length})`:'';
+  if(!ideas.length){c.innerHTML=`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:12px 0;">No ideas stashed yet. Don't lose them.</div>`;return;}
+  c.innerHTML=ideas.map(e=>`<div class="idea-item">
+    <button class="idea-del" onclick="deleteIdeaEntry(${e.id})">✕</button>
+    <div class="idea-title">${escH(e.title)}</div>
+    ${e.body?`<div class="idea-body">${escH(e.body)}</div>`:''}
+    <div class="idea-meta">
+      <span class="idea-tag tag-${e.tag}">${e.tag}</span>
+      <span class="idea-date">${e.date}</span>
+    </div>
+  </div>`).join('');
+}
+
+// ══ PROGRESSIVE TIERS ══
+// Milestones now support tiers: [{name, quests:[]}]
+// Legacy milestones (flat actions array) are auto-migrated to a single tier
+function migrateMilestoneToTiers(ms){
+  if(ms.tiers)return ms; // already new format
+  // Convert old flat actions to tier 1
+  return {
+    ...ms,
+    tiers:[{name:'Tier 1',quests:ms.actions||[]}],
+    actions:undefined
+  };
+}
+
+function addTier(msI){
+  milestones[msI]=migrateMilestoneToTiers(milestones[msI]);
+  const tierNum=milestones[msI].tiers.length+1;
+  milestones[msI].tiers.push({name:'Tier '+tierNum,quests:[]});
+  save('milestones',milestones);
+  saveCampaignCloud();
+  renderMilestones();
+}
+
+function isTierUnlocked(ms,tierIdx){
+  if(tierIdx===0)return true;
+  const prev=ms.tiers[tierIdx-1];
+  if(!prev||!prev.quests.length)return false;
+  return prev.quests.every(q=>q.done);
+}
+
+function toggleTierQuest(msI,tI,qI){
+  milestones[msI]=migrateMilestoneToTiers(milestones[msI]);
+  const q=milestones[msI].tiers[tI].quests[qI];
+  q.done=!q.done;
+  // Check if tier just completed
+  const tier=milestones[msI].tiers[tI];
+  const allDone=tier.quests.length>0&&tier.quests.every(q=>q.done);
+  if(allDone){
+    flashTierComplete(milestones[msI].name, tI+1);
+  }
+  save('milestones',milestones);
+  saveCampaignCloud();
+  renderMilestones();
+}
+
+function deleteTierQuest(msI,tI,qI){
+  milestones[msI]=migrateMilestoneToTiers(milestones[msI]);
+  milestones[msI].tiers[tI].quests.splice(qI,1);
+  save('milestones',milestones);
+  saveCampaignCloud();
+  renderMilestones();
+}
+
+function addTierQuest(msI,tI){
+  milestones[msI]=migrateMilestoneToTiers(milestones[msI]);
+  const inp=document.getElementById(`tqi-${msI}-${tI}`);
+  const text=inp.value.trim();
+  if(!text)return;
+  milestones[msI].tiers[tI].quests.push({id:Date.now(),text,done:false});
+  inp.value='';
+  save('milestones',milestones);
+  saveCampaignCloud();
+  renderMilestones();
+}
+
+function setTodayFromTier(msI,tI,text){
+  setTodayAction(text);
+}
+
+function flashTierComplete(bossName, tierNum){
+  const el=document.createElement('div');
+  el.className='tier-complete-flash';
+  el.style.cssText='display:flex;align-items:center;justify-content:center;';
+  el.innerHTML=`<div style="text-align:center;">
+    <div style="font-family:'Cinzel',serif;font-size:24px;font-weight:900;color:var(--success);text-shadow:0 0 30px var(--success);letter-spacing:4px;">TIER ${tierNum} COMPLETE</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(92,184,92,0.7);letter-spacing:2px;margin-top:6px;">${bossName}</div>
+  </div>`;
+  document.body.appendChild(el);
+  speak('Tier '+tierNum+' complete! Next tier unlocked.');
+  setTimeout(()=>el.remove(),900);
+}
+
 // ══ PLAN WITH NEXA ══
 let planMessages=[];
 let pendingPlan=null;
 
-const PLAN_PERSONA=`You are NEXA — Nexa OS goal architect. Your job is to have a focused conversation that extracts someone's massive goal and helps them break it down into milestones and daily actions.
+const PLAN_PERSONA=`You are NEXA — Nexa OS goal architect. Your job is to have a focused conversation that extracts someone's massive goal and helps them break it down into milestones with PROGRESSIVE TIERS of quests.
 
 Be conversational and sharp. Ask one or two questions at a time. Pull out:
 - The North Star (the one massive goal + target date)
-- 3-6 milestones (concrete steps toward it)
-- For each milestone: 2-4 daily actions (small repeatable things)
+- 3-7 milestones (concrete boss fights toward it)
+- For each milestone: 2-3 TIERS of quests that progress in difficulty
+  - Tier 1: Foundation quests (easy, build the habit)
+  - Tier 2: Development quests (harder, requires consistency)
+  - Tier 3: Mastery quests (advanced, unlocked after proving Tier 2)
 
-Once you have enough to build a real plan, generate it. Do not wait for perfection — a good plan now beats a perfect plan never.
+Tiers unlock sequentially — Tier 2 only unlocks when all Tier 1 quests are done. This creates a skill tree that rewards consistency.
 
 When you have enough information, output EXACTLY this JSON block (no markdown fences, no extra text around it — just the raw JSON starting with a line that says PLAN_JSON:):
 
 PLAN_JSON:
-{"goal":"...","targetDate":"YYYY-MM-DD or empty","milestones":[{"name":"...","actions":["...","...","..."]}]}
+{"goal":"...","targetDate":"YYYY-MM-DD or empty","milestones":[{"name":"...","tiers":[{"name":"Tier 1 — Foundation","quests":[{"id":1,"text":"...","done":false}]},{"name":"Tier 2 — Development","quests":[{"id":2,"text":"...","done":false}]},{"name":"Tier 3 — Mastery","quests":[{"id":3,"text":"...","done":false}]}]}]}
 
 Before generating the JSON, briefly summarize the plan in one sentence and say you're ready to lock it in.`;
 
@@ -1102,8 +1472,31 @@ function savePlanToSystem(){
   northStar.date=pendingPlan.targetDate||'';
   save('northStar',northStar);
   const existing=milestones.length>0;
-  if(existing&&!confirm('You have existing milestones. Replace them with the new plan?'))return;
-  milestones=pendingPlan.milestones.map(ms=>({id:Date.now()+Math.random(),name:ms.name,actions:ms.actions.map(a=>({id:Date.now()+Math.random(),text:a,done:false}))}));
+  if(existing&&!confirm('You have existing boss fights. Replace them with the new campaign?'))return;
+  // Handle both old format (actions[]) and new format (tiers[])
+  milestones=pendingPlan.milestones.map(ms=>{
+    if(ms.tiers){
+      // New tiered format — ensure IDs
+      return {
+        id:Date.now()+Math.random(),
+        name:ms.name,
+        tiers:ms.tiers.map((t,ti)=>({
+          name:t.name||`Tier ${ti+1}`,
+          quests:(t.quests||[]).map(q=>({id:Date.now()+Math.random(),text:typeof q==='string'?q:q.text,done:false}))
+        }))
+      };
+    } else {
+      // Old format — wrap actions in Tier 1
+      return {
+        id:Date.now()+Math.random(),
+        name:ms.name,
+        tiers:[{
+          name:'Tier 1 — Foundation',
+          quests:(ms.actions||[]).map(a=>({id:Date.now()+Math.random(),text:a,done:false}))
+        }]
+      };
+    }
+  });
   save('milestones',milestones);
   saveCampaignCloud();
   closePlan();
@@ -1111,7 +1504,7 @@ function savePlanToSystem(){
   renderMilestones();
   renderTodayAction();
   switchPanel('goals',document.querySelectorAll('.nav-btn')[1]);
-  addMessage('nexa','✓ Campaign locked in and synced to the cloud. Opens on any device automatically.');
+  addMessage('nexa','✓ Campaign locked in with progressive quest tiers. Synced to the cloud — opens on any device automatically. Your Tier 1 quests are ready. Complete them to unlock Tier 2.');
 }
 
 function discardPlan(){
@@ -1120,7 +1513,7 @@ function discardPlan(){
   addPlanMsg('nexa','No problem. Keep going — tell me more and we\'ll refine it.');
 }
 
-window.addEventListener('load',()=>{updateVoiceUI();renderNorthStar();renderMilestones();renderTodayAction();syncFinanceData();loadCampaignCloud();});
+window.addEventListener('load',()=>{updateVoiceUI();renderNorthStar();renderMilestones();renderTodayAction();renderCodex();renderIdeas();syncFinanceData();loadCampaignCloud();});
 </script>
 </body>
 </html>
