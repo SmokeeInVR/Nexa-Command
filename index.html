@@ -1662,7 +1662,7 @@ const BOSS_STAT_MAP = {
 function questToStat(text, bossIdx){
   const t = text.toLowerCase();
   if(t.includes('workout')||t.includes('fitness')||t.includes('walk')||t.includes('meal')||t.includes('eat')||t.includes('health')||t.includes('checkup')) return 'body';
-  if(t.includes('trade')||t.includes('trading')||t.includes('chart')||t.includes('rule')||t.includes('protocol')||t.includes('session')) return 'edge';
+  if(t.includes('trade')||t.includes('trading')||t.includes('chart')||t.includes('rule')||t.includes('protocol')||t.includes('session')||t.includes('strategy')||t.includes('setup')) return 'edge';
   if(t.includes('income')||t.includes('debt')||t.includes('finance')||t.includes('payment')||t.includes('card')||t.includes('transfer')||t.includes('invest')||t.includes('budget')) return 'wealth';
   if(t.includes('usda')||t.includes('lender')||t.includes('home')||t.includes('land')||t.includes('house')||t.includes('rent')||t.includes('credit score')||t.includes('qualify')) return 'home';
   if(t.includes('build')||t.includes('feature')||t.includes('app')||t.includes('scheduler')||t.includes('nexa')||t.includes('code')||t.includes('develop')) return 'build';
@@ -1682,7 +1682,16 @@ const STAT_INFO = {
 // Quest frequency type
 function questFrequency(text){
   const t = text.toLowerCase();
-  if(t.includes('every week')||t.includes('weekly')||t.includes('once a week')||t.includes('per week')||t.includes('sunday')||t.includes('month')) return 'weekly';
+  // Explicitly weekly
+  if(t.includes('every week')||t.includes('weekly')||t.includes('once a week')||t.includes('per week')||t.includes('sunday')||t.includes('every month')||t.includes('per month')||t.includes('once a month')||t.includes('monthly')) return 'weekly';
+  // Home/research tasks are weekly
+  if(t.includes('research')||t.includes('look up')||t.includes('usda')||t.includes('lender')||t.includes('investigate')||t.includes('program')||t.includes('zone')) return 'weekly';
+  // Finance tracking is weekly
+  if(t.includes('log all income')||t.includes('check all debt')||t.includes('track monthly')||t.includes('savings from')) return 'weekly';
+  // Body tasks are daily
+  if(t.includes('workout')||t.includes('fitness')||t.includes('log workout')||t.includes('meal plan')||t.includes('walk')||t.includes('physical activity')) return 'daily';
+  // Build/edge tasks are daily
+  if(t.includes('chart')||t.includes('review')||t.includes('build')||t.includes('feature')||t.includes('develop')) return 'daily';
   return 'daily';
 }
 
