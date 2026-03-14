@@ -307,6 +307,8 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 .add-quest-input{flex:1;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:5px;padding:6px 8px;color:var(--text-bright);font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;}
 .add-quest-input:focus{border-color:var(--border-gold);}
 .add-quest-btn{padding:6px 10px;background:rgba(212,165,62,0.08);border:1px solid var(--border-gold);border-radius:5px;color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;}
+.freq-toggle-btn{padding:6px 8px;background:rgba(212,165,62,0.06);border:1px solid var(--border-gold);border-radius:5px;color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:0.5px;white-space:nowrap;transition:all 0.2s;min-width:46px;text-align:center;}
+.freq-toggle-btn[data-freq="weekly"]{background:rgba(91,155,213,0.1);border-color:rgba(91,155,213,0.3);color:#5b9bd5;}
 .boss-footer-btns{display:flex;gap:6px;margin-top:10px;}
 .boss-footer-btn{flex:1;padding:5px;background:none;border-radius:5px;font-family:'Share Tech Mono',monospace;font-size:9px;cursor:pointer;transition:all 0.2s;}
 .boss-footer-btn.edit{border:1px solid var(--border);color:var(--text-dim);}
@@ -1111,7 +1113,7 @@ function renderMilestones(){
           <div class="bq-check ${q.done?'done':''}" onclick="toggleTierQuestKeepOpen(${i},${tI},${qI})">${q.done?'✓':''}</div>
           <div class="bq-text ${q.done?'done':''}">${escH(q.text)}</div>
           <span class="bq-freq-badge ${freqBadgeClass}">${freqLabel}</span>
-          ${!q.done&&unlocked?`<button class="bq-assign" onclick="setTodayFromTier(${i},${tI},'${escA(q.text)}')">⚡</button>`:''}
+          ${!q.done&&unlocked?`<button class="bq-assign" data-ms="${i}" data-ti="${tI}" data-qi="${qI}" onclick="assignQuestFromBoss(this)">⚡</button>`:''}
           <button class="bq-del" onclick="deleteTierQuest(${i},${tI},${qI})">✕</button>
         </div>`;
       }).join('');
@@ -1125,6 +1127,7 @@ function renderMilestones(){
           ${questsHtml}
           ${unlocked?`<div class="add-quest-row">
             <input class="add-quest-input" id="tqi-${i}-${tI}" placeholder="Add quest..." onkeydown="if(event.key==='Enter')addTierQuest(${i},${tI})">
+            <button class="freq-toggle-btn" id="tqf-${i}-${tI}" data-freq="daily" onclick="toggleQuestFreq(${i},${tI})">daily</button>
             <button class="add-quest-btn" onclick="addTierQuest(${i},${tI})">+</button>
           </div>`:''}
         </div>
@@ -1585,10 +1588,18 @@ function deleteTierQuest(msI,tI,qI){
 function addTierQuest(msI,tI){
   milestones[msI]=migrateMilestoneToTiers(milestones[msI]);
   const inp=document.getElementById(`tqi-${msI}-${tI}`);
-  const text=inp.value.trim();
+  const freqBtn=document.getElementById(`tqf-${msI}-${tI}`);
+  let text=inp.value.trim();
   if(!text)return;
+  // Tag with freq so questFrequency() detects it correctly
+  const chosenFreq=freqBtn?freqBtn.dataset.freq:'daily';
+  if(chosenFreq==='weekly' && !questFrequency(text)==='weekly'){
+    // Append a weekly marker if the text wouldn't auto-detect as weekly
+    if(questFrequency(text)!=='weekly') text=text+' (weekly)';
+  }
   milestones[msI].tiers[tI].quests.push({id:Date.now(),text,done:false});
   inp.value='';
+  if(freqBtn){freqBtn.dataset.freq='daily';freqBtn.textContent='daily';}
   save('milestones',milestones);
   saveCampaignCloud();
   renderMilestonesKeepOpen();
@@ -1596,6 +1607,28 @@ function addTierQuest(msI,tI){
 
 function setTodayFromTier(msI,tI,text){
   setTodayAction(text);
+}
+
+// Safe assign from boss fight — reads quest text from data model, not inline string
+function assignQuestFromBoss(btn){
+  const msI=parseInt(btn.dataset.ms);
+  const tI=parseInt(btn.dataset.ti);
+  const qI=parseInt(btn.dataset.qi);
+  const ms=migrateMilestoneToTiers(milestones[msI]);
+  const text=ms.tiers[tI].quests[qI].text;
+  setTodayAction(text);
+  // Visual feedback
+  btn.textContent='✓';
+  btn.style.color='var(--success)';
+  setTimeout(()=>{btn.textContent='⚡';btn.style.color='';},1200);
+}
+
+function toggleQuestFreq(msI,tI){
+  const btn=document.getElementById(`tqf-${msI}-${tI}`);
+  if(!btn)return;
+  const isDaily=btn.dataset.freq==='daily';
+  btn.dataset.freq=isDaily?'weekly':'daily';
+  btn.textContent=isDaily?'weekly':'daily';
 }
 
 function flashTierComplete(bossName, tierNum){
