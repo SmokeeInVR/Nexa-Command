@@ -1390,7 +1390,14 @@ function renderMarkdown(t){
 }
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escA(s){return String(s).replace(/'/g,"\\'");}
-function switchPanel(n,b){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));const p=document.getElementById('panel-'+n);if(p)p.classList.add('active');if(b)b.classList.add('active');}
+function switchPanel(n,b){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  const p=document.getElementById('panel-'+n);
+  if(p)p.classList.add('active');
+  if(b)b.classList.add('active');
+  if(n==='goals') renderArena();
+}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
 function quickPrompt(t){document.getElementById('chatInput').value=t;sendMessage();}
 function sendDirect(t){document.getElementById('chatInput').value=t;sendMessage();}
@@ -2315,6 +2322,7 @@ function toggleArenaHistory(){
 
 function renderArena(){
   const c = document.getElementById('arenaContainer');
+  if(!c) return; // not in DOM yet (panel hidden)
   if(!arenaState || !arenaState.currentBoss){
     c.innerHTML='<div class="arena-loading">No boss this week yet. <button class="arena-spawn-btn" onclick="spawnArenaBoss(getMondayStr())">Spawn Boss</button></div>';
     return;
