@@ -1056,18 +1056,33 @@ async function syncFinanceData(){
 }
 function renderFinanceCard(){
   if(!financeData)return;const d=financeData;
-  const cash=d.cash?.total??0,wi=d.income?.totalWeekly??0,mi=d.income?.estimatedMonthly??0,s30=d.spending?.last30Days??0,td=d.debts?.totalRemaining??0,di=d.debts?.items??[],fb=d.budget?.monthlyFixedBills??0;
-  const wm=wi-(fb/4.33)-(s30/4.33);
+  const cash=d.cash?.total??0,wi=d.income?.totalWeekly??0,mi=d.income?.estimatedMonthly??0,td=d.debts?.totalRemaining??0,di=d.debts?.items??[],fb=d.budget?.monthlyFixedBills??0;
+  const weeklyMargin=wi-(fb/4.33);
   const fs=n=>'$'+Math.abs(parseFloat(n)).toLocaleString(undefined,{maximumFractionDigits:0});
   const ff=n=>'$'+parseFloat(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  // Clean 2-stat summary row
   let html=`<div class="finance-grid">
     <div class="finance-stat"><div class="finance-stat-label">Total Cash</div><div class="finance-stat-value ${cash<500?'warn':''}">${fs(cash)}</div><div class="finance-stat-sub">All accounts</div></div>
     <div class="finance-stat"><div class="finance-stat-label">Weekly Income</div><div class="finance-stat-value ${wi===0?'warn':'ok'}">${fs(wi)}</div><div class="finance-stat-sub">~${fs(mi)}/mo</div></div>
-    <div class="finance-stat"><div class="finance-stat-label">30-Day Spend</div><div class="finance-stat-value ${s30>mi*0.6?'warn':''}">${fs(s30)}</div><div class="finance-stat-sub">Last 30 days</div></div>
-    <div class="finance-stat"><div class="finance-stat-label">Weekly Margin</div><div class="finance-stat-value ${wm<0?'warn':'ok'}">${wm<0?'-':''}${fs(wm)}</div><div class="finance-stat-sub">Est. net/week</div></div>
+  </div>
+  <div class="finance-grid" style="margin-top:6px;">
+    <div class="finance-stat"><div class="finance-stat-label">Weekly Margin</div><div class="finance-stat-value ${weeklyMargin<0?'warn':'ok'}">${weeklyMargin<0?'-':''}${fs(Math.abs(weeklyMargin))}</div><div class="finance-stat-sub">After bills</div></div>
+    <div class="finance-stat"><div class="finance-stat-label">Total Debt</div><div class="finance-stat-value warn">${fs(td)}</div><div class="finance-stat-sub">${di.length} accounts</div></div>
   </div>`;
-  if(di.length){const mx=Math.max(...di.map(x=>parseFloat(x.remainingBalance)));
-    html+=`<div class="finance-debt-section"><div class="finance-debt-header"><span>Debts (${di.length})</span><span style="color:var(--warn)">${ff(td)} total</span></div>${di.map(debt=>{const bal=parseFloat(debt.remainingBalance),pct=mx>0?(bal/mx)*100:100;return`<div class="finance-debt-row"><div class="finance-debt-top"><div class="finance-debt-name">${debt.name}</div><div class="finance-debt-balance">${ff(bal)}</div></div><div class="finance-debt-meta">${ff(debt.monthlyPayment)}/mo · ${debt.apr}% APR</div><div class="finance-bar-bg"><div class="finance-bar-fill" style="width:${pct}%"></div></div></div>`;}).join('')}</div>`;
+  // Debt list — compact
+  if(di.length){
+    const mx=Math.max(...di.map(x=>parseFloat(x.remainingBalance)));
+    html+=`<div class="finance-debt-section" style="margin-top:10px;">
+      <div class="finance-debt-header"><span>Debts</span><span style="color:var(--warn)">${ff(td)}</span></div>
+      ${di.map(debt=>{
+        const bal=parseFloat(debt.remainingBalance),pct=mx>0?(bal/mx)*100:100;
+        return`<div class="finance-debt-row">
+          <div class="finance-debt-top"><div class="finance-debt-name">${debt.name}</div><div class="finance-debt-balance">${ff(bal)}</div></div>
+          <div class="finance-debt-meta">${ff(debt.monthlyPayment)}/mo${debt.apr&&parseFloat(debt.apr)>0?' · '+debt.apr+'% APR':''}</div>
+          <div class="finance-bar-bg"><div class="finance-bar-fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('')}
+    </div>`;
   }
   document.getElementById('financeContent').innerHTML=html;
 }
