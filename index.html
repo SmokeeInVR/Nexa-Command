@@ -447,6 +447,42 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 .plan-actions-row{display:flex;gap:8px;margin-top:12px;}
 .plan-save-btn{flex:1;padding:10px;background:linear-gradient(135deg,rgba(212,165,62,0.15),rgba(212,165,62,0.07));border:1px solid var(--border-gold);border-radius:8px;color:var(--gold);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;cursor:pointer;}
 .plan-discard-btn{padding:10px 14px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;}
+
+/* ══ CHARACTER STATS ══ */
+.char-stats-card{background:rgba(0,0,0,0.3);border:1px solid var(--border-gold);border-radius:10px;padding:12px 14px;margin-bottom:12px;}
+.char-stats-title{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;}
+.char-stat-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.char-stat-row:last-child{margin-bottom:0;}
+.char-stat-icon{font-size:13px;width:18px;text-align:center;flex-shrink:0;}
+.char-stat-name{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;width:44px;flex-shrink:0;text-transform:uppercase;}
+.char-stat-bar-bg{flex:1;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;border:1px solid rgba(212,165,62,0.1);}
+.char-stat-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:3px;transition:width 0.8s ease;box-shadow:0 0 6px rgba(212,165,62,0.4);}
+.char-stat-val{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);width:24px;text-align:right;flex-shrink:0;}
+
+/* ══ QUEST PICKER MODAL ══ */
+.quest-picker-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:800;align-items:flex-end;justify-content:center;}
+.quest-picker-overlay.open{display:flex;}
+.quest-picker-sheet{background:#111;border:1px solid var(--border);border-top:2px solid var(--gold);border-radius:14px 14px 0 0;padding:20px 18px 40px;width:100%;max-width:480px;max-height:75vh;overflow-y:auto;}
+.quest-picker-title{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--text-bright);letter-spacing:3px;margin-bottom:4px;}
+.quest-picker-sub{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--gold-dim);letter-spacing:2px;margin-bottom:16px;}
+.quest-pick-item{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;}
+.quest-pick-item:hover{border-color:var(--border-gold);background:rgba(212,165,62,0.04);}
+.quest-pick-item.selected{border-color:var(--gold);background:rgba(212,165,62,0.08);}
+.quest-pick-left{flex:1;}
+.quest-pick-stat{display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+.quest-pick-stat-icon{font-size:11px;}
+.quest-pick-stat-name{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--gold-dim);letter-spacing:1px;text-transform:uppercase;}
+.quest-pick-badge{font-family:'Share Tech Mono',monospace;font-size:7px;padding:1px 5px;border-radius:3px;letter-spacing:1px;margin-left:4px;}
+.badge-daily{background:rgba(212,165,62,0.12);color:var(--gold);border:1px solid var(--border-gold);}
+.badge-weekly{background:rgba(91,155,213,0.12);color:#5b9bd5;border:1px solid rgba(91,155,213,0.25);}
+.quest-pick-text{font-size:13px;font-weight:600;color:var(--text-bright);line-height:1.35;}
+.quest-pick-boss{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);margin-top:3px;}
+.quest-pick-check{width:20px;height:20px;border:1px solid var(--border);border-radius:4px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.quest-pick-item.selected .quest-pick-check{background:rgba(212,165,62,0.2);border-color:var(--gold);color:var(--gold);font-size:12px;}
+.quest-picker-actions{display:flex;gap:8px;margin-top:12px;}
+.quest-pick-assign-btn{flex:1;padding:12px;background:linear-gradient(135deg,rgba(212,165,62,0.15),rgba(212,165,62,0.07));border:1px solid var(--border-gold);border-radius:8px;color:var(--gold);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;cursor:pointer;}
+.quest-pick-cancel-btn{padding:12px 14px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;}
+
 </style>
 </head>
 <body>
@@ -557,6 +593,20 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
   </div>
 </div>
 
+
+<!-- QUEST PICKER MODAL -->
+<div class="quest-picker-overlay" id="questPickerOverlay">
+  <div class="quest-picker-sheet">
+    <div class="quest-picker-title">⚡ TODAY'S QUESTS</div>
+    <div class="quest-picker-sub">Balanced across all character stats — tap to select, assign to activate</div>
+    <div id="questPickerList"></div>
+    <div class="quest-picker-actions">
+      <button class="quest-pick-assign-btn" onclick="assignSelectedQuests()">⚡ Assign Selected</button>
+      <button class="quest-pick-cancel-btn" onclick="closeQuestPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- MILESTONE MODAL -->
 
 <div class="modal-overlay" id="msModal">
@@ -658,6 +708,17 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
   <div class="panel" id="panel-goals">
     <div class="status-panel">
 
+      <!-- CHARACTER STATS -->
+      <div class="char-stats-card" id="charStatsCard">
+        <div class="char-stats-title">Character Stats</div>
+        <div class="char-stat-row"><div class="char-stat-icon">💰</div><div class="char-stat-name">Wealth</div><div class="char-stat-bar-bg"><div class="char-stat-bar-fill" id="stat-wealth" style="width:0%"></div></div><div class="char-stat-val" id="stat-wealth-val">0</div></div>
+        <div class="char-stat-row"><div class="char-stat-icon">🏡</div><div class="char-stat-name">Home</div><div class="char-stat-bar-bg"><div class="char-stat-bar-fill" id="stat-home" style="width:0%"></div></div><div class="char-stat-val" id="stat-home-val">0</div></div>
+        <div class="char-stat-row"><div class="char-stat-icon">📈</div><div class="char-stat-name">Edge</div><div class="char-stat-bar-bg"><div class="char-stat-bar-fill" id="stat-edge" style="width:0%"></div></div><div class="char-stat-val" id="stat-edge-val">0</div></div>
+        <div class="char-stat-row"><div class="char-stat-icon">⚙️</div><div class="char-stat-name">Build</div><div class="char-stat-bar-bg"><div class="char-stat-bar-fill" id="stat-build" style="width:0%"></div></div><div class="char-stat-val" id="stat-build-val">0</div></div>
+        <div class="char-stat-row"><div class="char-stat-icon">💪</div><div class="char-stat-name">Body</div><div class="char-stat-bar-bg"><div class="char-stat-bar-fill" id="stat-body" style="width:0%"></div></div><div class="char-stat-val" id="stat-body-val">0</div></div>
+        <div class="char-stat-row"><div class="char-stat-icon">🧠</div><div class="char-stat-name">Mind</div><div class="char-stat-bar-bg"><div class="char-stat-bar-fill" id="stat-mind" style="width:0%"></div></div><div class="char-stat-val" id="stat-mind-val">0</div></div>
+      </div>
+
       <!-- FINAL BOSS -->
       <div class="section-label">⚔ Final Boss</div>
       <div class="final-boss-card">
@@ -698,7 +759,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         <div class="quest-text empty" id="todayActionText">No quest active — assign one from Boss Fights below or ask NEXA.</div>
         <div class="quest-btns">
           <button class="quest-btn complete-btn" id="todayDoneBtn" onclick="completeTodayAction()">⚔ Quest Complete</button>
-          <button class="quest-btn nexa-btn" onclick="askNexaForAction()">✦ Ask NEXA</button>
+          <button class="quest-btn nexa-btn" onclick="openQuestPicker()">⚡ Pick Quests</button>
         </div>
       </div>
 
@@ -919,18 +980,16 @@ function setTodayAction(text){todayAction={text,completed:false,date:todayStr()}
 function renderMilestones(){
   const c=document.getElementById('milestonesContainer');
   if(!milestones.length){c.innerHTML=`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:14px 0;border:1px dashed var(--border);border-radius:8px;">No boss fights yet. Add one or Start Campaign.</div>`;return;}
-  const bossIcons=['👹','💀','🐲','👿','🦂','🔱','⚡','🌑','💣','🗡'];
   c.innerHTML=milestones.map((msRaw,i)=>{
     const ms=migrateMilestoneToTiers(msRaw);
     const tiers=ms.tiers||[];
-    // Compute total quests and done
     const totalQ=tiers.reduce((a,t)=>a+t.quests.length,0);
     const doneQ=tiers.reduce((a,t)=>a+t.quests.filter(q=>q.done).length,0);
     const defeated=doneQ===totalQ&&totalQ>0;
     const hp=totalQ>0?Math.round(((totalQ-doneQ)/totalQ)*100):100;
     const hpClass=hp>60?'boss-hp-full':hp>30?'boss-hp-mid':'boss-hp-low';
-    const icon=bossIcons[i%bossIcons.length];
 
+    // Tiers rendered inline — no extra click needed to see quests
     const tiersHtml=tiers.map((tier,tI)=>{
       const unlocked=isTierUnlocked(ms,tI);
       const tierDone=tier.quests.length>0&&tier.quests.every(q=>q.done);
@@ -938,21 +997,21 @@ function renderMilestones(){
       const tierStatusLabel=tierDone?'✓ Done':unlocked?'Active':'🔒 Locked';
       const questsHtml=tier.quests.map((q,qI)=>`
         <div class="boss-quest-item">
-          <div class="bq-check ${q.done?'done':''}" onclick="toggleTierQuest(${i},${tI},${qI})">${q.done?'✓':''}</div>
+          <div class="bq-check ${q.done?'done':''}" onclick="toggleTierQuestKeepOpen(${i},${tI},${qI},'msa-${i}')">${q.done?'✓':''}</div>
           <div class="bq-text ${q.done?'done':''}">${escH(q.text)}</div>
-          ${!q.done&&unlocked?`<button class="bq-assign" onclick="setTodayFromTier(${i},${tI},'${escA(q.text)}')">⚡ Assign</button>`:''}
+          ${!q.done&&unlocked?`<button class="bq-assign" onclick="setTodayFromTier(${i},${tI},'${escA(q.text)}')">⚡</button>`:''}
           <button class="bq-del" onclick="deleteTierQuest(${i},${tI},${qI})">✕</button>
         </div>`).join('');
       return `<div class="tier-block ${!unlocked?'tier-locked':''}">
-        <div class="tier-header" onclick="${unlocked?`toggleTierInline(this)`:''}">
+        <div class="tier-header" onclick="${unlocked?`toggleTierInline(this)`:``}">
           <div class="tier-num">T${tI+1}</div>
           <div class="tier-title">${escH(tier.name)} <span style="color:var(--text-dim);font-size:8px;">(${tier.quests.filter(q=>q.done).length}/${tier.quests.length})</span></div>
           <span class="tier-status ${tierStatus}">${tierStatusLabel}</span>
         </div>
-        <div class="tier-quests" style="${!unlocked?'display:none':''}">
+        <div class="tier-quests${tI===0&&unlocked?' open':''}">
           ${questsHtml}
           ${unlocked?`<div class="add-quest-row">
-            <input class="add-quest-input" id="tqi-${i}-${tI}" placeholder="Add quest to this tier..." onkeydown="if(event.key==='Enter')addTierQuest(${i},${tI})">
+            <input class="add-quest-input" id="tqi-${i}-${tI}" placeholder="Add quest..." onkeydown="if(event.key==='Enter')addTierQuest(${i},${tI})">
             <button class="add-quest-btn" onclick="addTierQuest(${i},${tI})">+</button>
           </div>`:''}
         </div>
@@ -961,27 +1020,53 @@ function renderMilestones(){
 
     return `<div class="boss-fight-card ${defeated?'defeated':'active'}" id="ms-${i}">
       <div class="boss-fight-header" onclick="toggleMs(${i})">
-        <div class="boss-fight-icon">${defeated?'✅':icon}</div>
-        <div class="boss-fight-info">
+        <div class="boss-fight-info" style="padding-left:4px;">
           <div class="boss-fight-name">${escH(ms.name)}</div>
           <div class="boss-hp-row">
             <div class="boss-hp-bar-bg"><div class="boss-hp-bar-fill ${hpClass}" style="width:${defeated?0:hp}%"></div></div>
-            <div class="boss-hp-label">${defeated?'✅ DEFEATED':hp+'% HP'}</div>
+            <div class="boss-hp-label">${defeated?'✓ DONE':hp+'% HP'}</div>
           </div>
         </div>
         <span class="boss-chev" id="msc-${i}">›</span>
       </div>
       <div class="boss-quests" id="msa-${i}">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(224,85,85,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Quest Tiers (${doneQ}/${totalQ} complete)</div>
         ${tiersHtml}
         <div class="boss-footer-btns" style="margin-top:8px;">
-          <button class="boss-footer-btn edit" onclick="addTier(${i})" style="border-color:var(--border-gold);color:var(--gold);">+ Add Tier</button>
-          <button class="boss-footer-btn edit" onclick="openMsModal(${i})">Edit Name</button>
+          <button class="boss-footer-btn edit" onclick="addTier(${i})" style="border-color:var(--border-gold);color:var(--gold);">+ Tier</button>
+          <button class="boss-footer-btn edit" onclick="openMsModal(${i})">Rename</button>
           <button class="boss-footer-btn del" onclick="deleteMilestone(${i})">Delete</button>
         </div>
       </div>
     </div>`;
   }).join('');
+  renderCharacterStats();
+}
+
+// Check quest without collapsing the open boss fight
+function toggleTierQuestKeepOpen(msI,tI,qI,keepOpenId){
+  milestones[msI]=migrateMilestoneToTiers(milestones[msI]);
+  const q=milestones[msI].tiers[tI].quests[qI];
+  q.done=!q.done;
+  const tier=milestones[msI].tiers[tI];
+  const allDone=tier.quests.length>0&&tier.quests.every(q=>q.done);
+  if(allDone)flashTierComplete(milestones[msI].name,tI+1);
+  save('milestones',milestones);
+  saveCampaignCloud();
+  // Re-render but restore open state
+  const openBosses=[];
+  document.querySelectorAll('.boss-quests.open').forEach(el=>openBosses.push(el.id));
+  const openTiers=[];
+  document.querySelectorAll('.tier-quests.open').forEach(el=>openTiers.push(el.dataset.tierKey||''));
+  renderMilestones();
+  // Restore open boss fights
+  openBosses.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.add('open');
+    const idx=id.replace('msa-','');
+    const chev=document.getElementById('msc-'+idx);
+    if(chev)chev.classList.add('open');
+  });
+  renderCharacterStats();
 }
 
 function toggleTierInline(header){
@@ -1584,7 +1669,169 @@ function discardPlan(){
   addPlanMsg('nexa','No problem. Keep going — tell me more and we\'ll refine it.');
 }
 
-window.addEventListener('load',()=>{updateVoiceUI();renderNorthStar();renderMilestones();renderTodayAction();renderCodex();renderIdeas();syncFinanceData();loadCampaignCloud();});
+
+// ══ CHARACTER STATS SYSTEM ══
+// Each boss fight maps to a primary stat
+const BOSS_STAT_MAP = {
+  0:'wealth', 1:'home', 2:'build', 3:'edge', 4:'build', 5:'wealth', 6:'body', 7:'mind'
+};
+// Quest keyword → stat overrides
+function questToStat(text, bossIdx){
+  const t = text.toLowerCase();
+  if(t.includes('workout')||t.includes('fitness')||t.includes('walk')||t.includes('meal')||t.includes('eat')||t.includes('health')||t.includes('checkup')) return 'body';
+  if(t.includes('trade')||t.includes('trading')||t.includes('chart')||t.includes('rule')||t.includes('protocol')||t.includes('session')) return 'edge';
+  if(t.includes('income')||t.includes('debt')||t.includes('finance')||t.includes('payment')||t.includes('card')||t.includes('transfer')||t.includes('invest')||t.includes('budget')) return 'wealth';
+  if(t.includes('usda')||t.includes('lender')||t.includes('home')||t.includes('land')||t.includes('house')||t.includes('rent')||t.includes('credit score')||t.includes('qualify')) return 'home';
+  if(t.includes('build')||t.includes('feature')||t.includes('app')||t.includes('scheduler')||t.includes('nexa')||t.includes('code')||t.includes('develop')) return 'build';
+  if(t.includes('learn')||t.includes('read')||t.includes('research')||t.includes('codex')||t.includes('study')||t.includes('concept')||t.includes('review')) return 'mind';
+  return BOSS_STAT_MAP[bossIdx] || 'mind';
+}
+
+const STAT_INFO = {
+  wealth: {icon:'💰', name:'Wealth'},
+  home:   {icon:'🏡', name:'Home'},
+  edge:   {icon:'📈', name:'Edge'},
+  build:  {icon:'⚙️', name:'Build'},
+  body:   {icon:'💪', name:'Body'},
+  mind:   {icon:'🧠', name:'Mind'},
+};
+
+// Quest frequency type
+function questFrequency(text){
+  const t = text.toLowerCase();
+  if(t.includes('every week')||t.includes('weekly')||t.includes('once a week')||t.includes('per week')||t.includes('sunday')||t.includes('month')) return 'weekly';
+  return 'daily';
+}
+
+function renderCharacterStats(){
+  if(!milestones.length) return;
+  const statPoints = {wealth:0,home:0,edge:0,build:0,body:0,mind:0};
+  milestones.forEach((msRaw,i)=>{
+    const ms=migrateMilestoneToTiers(msRaw);
+    (ms.tiers||[]).forEach(t=>{
+      t.quests.forEach(q=>{
+        if(q.done){
+          const stat=questToStat(q.text,i);
+          statPoints[stat]=(statPoints[stat]||0)+1;
+        }
+      });
+    });
+  });
+  const maxVal=Math.max(1,...Object.values(statPoints));
+  Object.keys(statPoints).forEach(stat=>{
+    const bar=document.getElementById('stat-'+stat);
+    const val=document.getElementById('stat-'+stat+'-val');
+    if(bar) bar.style.width=Math.round((statPoints[stat]/Math.max(maxVal,10))*100)+'%';
+    if(val) val.textContent=statPoints[stat];
+  });
+}
+
+// ══ QUEST PICKER ══
+let selectedQuestTexts = [];
+
+function openQuestPicker(){
+  selectedQuestTexts = [];
+  const list = document.getElementById('questPickerList');
+  list.innerHTML = '';
+
+  if(!milestones.length){
+    list.innerHTML = '<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:20px 0;">No boss fights yet. Start Campaign first.</div>';
+    document.getElementById('questPickerOverlay').classList.add('open');
+    return;
+  }
+
+  // Gather one open quest per stat for balance
+  const statBuckets = {wealth:null,home:null,edge:null,build:null,body:null,mind:null};
+  const allOpen = [];
+
+  milestones.forEach((msRaw,msI)=>{
+    const ms=migrateMilestoneToTiers(msRaw);
+    // Find the active tier
+    const activeTier=(ms.tiers||[]).find((t,tI)=>isTierUnlocked(ms,tI)&&t.quests.some(q=>!q.done));
+    if(!activeTier)return;
+    activeTier.quests.filter(q=>!q.done).forEach(q=>{
+      const stat=questToStat(q.text,msI);
+      const freq=questFrequency(q.text);
+      allOpen.push({text:q.text,stat,freq,boss:ms.name,msI});
+    });
+  });
+
+  // Fill stat buckets — one per stat, prefer daily
+  allOpen.forEach(q=>{
+    if(!statBuckets[q.stat]) statBuckets[q.stat]=q;
+  });
+
+  // Build display list — stat buckets first, then fill up to 6 total
+  const picked = Object.values(statBuckets).filter(Boolean);
+  // Add extras if under 6
+  allOpen.forEach(q=>{
+    if(picked.length>=6)return;
+    if(!picked.find(p=>p.text===q.text))picked.push(q);
+  });
+
+  if(!picked.length){
+    list.innerHTML = '<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--success);text-align:center;padding:20px 0;">All current tier quests complete! Check back after unlocking Tier 2.</div>';
+    document.getElementById('questPickerOverlay').classList.add('open');
+    return;
+  }
+
+  picked.forEach((q,idx)=>{
+    const info=STAT_INFO[q.stat]||STAT_INFO.mind;
+    const div=document.createElement('div');
+    div.className='quest-pick-item';
+    div.dataset.text=q.text;
+    div.innerHTML=`
+      <div class="quest-pick-left">
+        <div class="quest-pick-stat">
+          <span class="quest-pick-stat-icon">${info.icon}</span>
+          <span class="quest-pick-stat-name">${info.name}</span>
+          <span class="quest-pick-badge ${q.freq==='daily'?'badge-daily':'badge-weekly'}">${q.freq}</span>
+        </div>
+        <div class="quest-pick-text">${escH(q.text)}</div>
+        <div class="quest-pick-boss">${escH(q.boss)}</div>
+      </div>
+      <div class="quest-pick-check" id="qpc-${idx}"></div>
+    `;
+    div.onclick=()=>{
+      const isSelected=div.classList.toggle('selected');
+      const check=document.getElementById('qpc-'+idx);
+      check.textContent=isSelected?'✓':'';
+      if(isSelected){
+        selectedQuestTexts.push(q.text);
+      } else {
+        selectedQuestTexts=selectedQuestTexts.filter(t=>t!==q.text);
+      }
+    };
+    list.appendChild(div);
+  });
+
+  document.getElementById('questPickerOverlay').classList.add('open');
+}
+
+function closeQuestPicker(){
+  document.getElementById('questPickerOverlay').classList.remove('open');
+  selectedQuestTexts=[];
+}
+
+function assignSelectedQuests(){
+  if(!selectedQuestTexts.length){
+    // If nothing selected, assign first available
+    const firstItem=document.querySelector('.quest-pick-item');
+    if(firstItem)firstItem.click();
+    if(!selectedQuestTexts.length){closeQuestPicker();return;}
+  }
+  // Assign first selected as active quest, queue rest
+  setTodayAction(selectedQuestTexts[0]);
+  closeQuestPicker();
+  // If multiple selected, show them all as a combined quest label
+  if(selectedQuestTexts.length>1){
+    const combined=selectedQuestTexts.join(' · ');
+    setTodayAction(combined);
+  }
+}
+
+
+window.addEventListener('load',()=>{updateVoiceUI();renderNorthStar();renderMilestones();renderTodayAction();renderCodex();renderIdeas();renderCharacterStats();syncFinanceData();loadCampaignCloud();});
 </script>
 </body>
 </html>
