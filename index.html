@@ -1027,20 +1027,32 @@ function updateVoiceUI(){
     ?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg> ON`
     :`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
 }
-function speak(text,orbId='voiceOrb'){
+async function speak(text,orbId='voiceOrb'){
   if(!voiceEnabled)return;
-  speechSynthesis.cancel();
   const clean=text.replace(/<[^>]+>/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/#{1,3} /g,'').trim();
-  const u=new SpeechSynthesisUtterance(clean);
-  u.rate=0.95;u.pitch=1.0;
-  const voices=speechSynthesis.getVoices();
-  const pref=voices.find(v=>v.name.includes('Google')||v.name.includes('Samantha')||v.name.includes('Alex')||v.name.includes('Daniel'));
-  if(pref)u.voice=pref;
+  if(!clean)return;
   const orb=document.getElementById(orbId);
-  u.onstart=()=>{if(orb)orb.classList.add('active');};
-  u.onend=()=>{if(orb)orb.classList.remove('active');};
-  u.onerror=()=>{if(orb)orb.classList.remove('active');};
-  setTimeout(()=>speechSynthesis.speak(u),150);
+  if(orb)orb.classList.add('active');
+  try{
+    const res=await fetch(`${FINANCE_URL}/api/ai/speak`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:clean.slice(0,2500)})});
+    if(!res.ok)throw new Error('TTS failed');
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const audio=new Audio(url);
+    audio.onended=()=>{if(orb)orb.classList.remove('active');URL.revokeObjectURL(url);};
+    audio.onerror=()=>{if(orb)orb.classList.remove('active');};
+    await audio.play();
+  }catch(e){
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(clean);
+    u.rate=0.95;u.pitch=1.0;
+    const voices=speechSynthesis.getVoices();
+    const pref=voices.find(v=>v.name.includes('Google')||v.name.includes('Samantha')||v.name.includes('Alex'));
+    if(pref)u.voice=pref;
+    u.onstart=()=>{if(orb)orb.classList.add('active');};
+    u.onend=()=>{if(orb)orb.classList.remove('active');};
+    setTimeout(()=>speechSynthesis.speak(u),150);
+  }
 }
 
 // ══ NORTH STAR ══
@@ -1264,7 +1276,7 @@ If today is Monday, announce the Arena boss dramatically in one sentence — inc
   messages.push({role:'user',content:prompt});
   const t=showTyping();
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,system:NEXA_PERSONA+liveFinanceContext+liveMealContext,messages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages})});
     const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});
     speak(reply,'voiceOrb');
@@ -1276,8 +1288,69 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 // ══ FINANCE SYNC ══
 const FINANCE_URL='https://nexa-finance-production.up.railway.app';
+const TRADE_URL='https://nexa-trade-production.up.railway.app';
 let financeData=null,liveFinanceContext='';
 let mealData=null,liveMealContext='';
+let fitnessData=null,liveFitnessContext='';
+let familyData=null,liveFamilyContext='';
+let tradingData=null,liveTradingContext='';
+
+async function syncFitnessData(){
+  try{
+    const res=await fetch(`${FINANCE_URL}/api/fitness/summary`);
+    if(!res.ok)return;
+    fitnessData=await res.json();
+    buildFitnessContext();
+  }catch(e){console.warn('Fitness sync failed',e);}
+}
+function buildFitnessContext(){
+  if(!fitnessData){liveFitnessContext='';return;}
+  const f=fitnessData;
+  const lines=['\n\n─── NEXAFIT DATA ───'];
+  if(f.todayWorkout) lines.push(`Today's workout: ${f.todayWorkout}`);
+  else lines.push('No workout logged today');
+  lines.push(`This week: ${f.weeklyCount} workouts | Water: ${f.waterToday}/${f.waterGoal} glasses`);
+  if(f.streak>0) lines.push(`Streak: ${f.streak} days this week`);
+  liveFitnessContext=lines.join('\n');
+}
+
+async function syncFamilyData(){
+  try{
+    const res=await fetch(`${FINANCE_URL}/api/family/summary`);
+    if(!res.ok)return;
+    familyData=await res.json();
+    buildFamilyContext();
+  }catch(e){console.warn('Family sync failed',e);}
+}
+function buildFamilyContext(){
+  if(!familyData){liveFamilyContext='';return;}
+  const f=familyData;
+  const lines=['\n\n─── FAMILY COMMAND CENTER ───'];
+  if(f.dinner) lines.push(`Tonight's dinner: ${f.dinner}`);
+  if(f.tasksTotal>0) lines.push(`Tasks: ${f.tasksDone}/${f.tasksTotal} done (${f.tasksPct}%)`);
+  if(f.babyNapping) lines.push(`Baby: Napping${f.napDuration?' ('+f.napDuration+')':''}`);
+  else if(f.babyMood) lines.push(`Baby mood: ${f.babyMood}`);
+  if(f.todayEvents?.length) lines.push(`Events today: ${f.todayEvents.slice(0,3).join(', ')}`);
+  liveFamilyContext=lines.join('\n');
+}
+
+async function syncTradingData(){
+  try{
+    const res=await fetch(`${FINANCE_URL}/api/trading/summary`);
+    if(!res.ok)return;
+    tradingData=await res.json();
+    buildTradingContext();
+  }catch(e){console.warn('Trading sync failed',e);}
+}
+function buildTradingContext(){
+  if(!tradingData){liveTradingContext='';return;}
+  const t=tradingData;
+  const lines=['\n\n─── NEXATRADE DATA ───'];
+  if(t.allTime) lines.push(`All-time P&L: $${(t.allTime.totalPnl||0).toFixed(2)} | Win rate: ${((t.allTime.winRate||0)*100).toFixed(0)}% | ${t.allTime.totalTrades||0} trades`);
+  if(t.thisWeek) lines.push(`This week: $${(t.thisWeek.totalPnl||0).toFixed(2)} (${t.thisWeek.trades||0} trades)`);
+  if(t.openTrades>0) lines.push(`Open trades: ${t.openTrades}`);
+  liveTradingContext=lines.join('\n');
+}
 
 async function syncMealData(){
   try{
@@ -1307,6 +1380,9 @@ async function syncFinanceData(){
     meta.innerHTML=`<span style="color:var(--success)">● LIVE</span> &nbsp;${t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
     renderFinanceCard();buildFinanceContext();
     syncMealData();
+    syncFitnessData();
+    syncFamilyData();
+    syncTradingData();
     checkQuestRefresh();
   }catch(e){meta.textContent='Sync failed';document.getElementById('financeContent').innerHTML=`<div class="finance-error">⚠ Could not reach Nexa Finance.<br>Check Railway is running.</div>`;}
   finally{btn.classList.remove('syncing');}
@@ -1373,7 +1449,7 @@ async function sendExplore(){
   if(!NEXAKEY){showKeyModal();return;}
   const inp=document.getElementById('exploreInput'),text=inp.value.trim();if(!text)return;inp.value='';inp.style.height='auto';
   addExploreMsg('user',text);exploreMessages.push({role:'user',content:text});const t=showExploreTyping();
-  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+NEXA_PERSONA+liveFinanceContext+liveMealContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
+  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
   catch(e){t.remove();addExploreMsg('nexa','⚠ '+e.message);}
 }
 function addExploreMsg(r,t){const c=document.getElementById('exploreMessages'),m=document.createElement('div');m.className='msg '+r;m.innerHTML=`<div class="msg-label">${r==='nexa'?'Nexa OS':'You'}</div><div class="msg-bubble">${renderMarkdown(t)}</div>`;c.appendChild(m);c.scrollTop=c.scrollHeight;}
@@ -1439,7 +1515,7 @@ async function sendMessage(){
   addMessage('user',text);messages.push({role:'user',content:text});const t=showTyping();
   try{
     const gc=northStar.goal?`\n\nNorth Star: "${northStar.goal}" (target: ${northStar.date||'none'}). Streak: ${streak.count} days.`:'';
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+gc,messages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext+gc,messages})});
     const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ API Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});if(messages.length>20)messages=messages.slice(-20);
     speak(reply,'voiceOrb');
@@ -2453,6 +2529,9 @@ window.addEventListener('load',()=>{
   renderNorthStar();renderMilestones();renderTodayAction();renderCodex();renderIdeas();renderCharacterStats();
   syncFinanceData();
   syncMealData();
+  syncFitnessData();
+  syncFamilyData();
+  syncTradingData();
   loadCampaignCloud();
 });
 </script>
