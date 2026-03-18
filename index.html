@@ -85,8 +85,10 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 .send-btn svg{width:18px;height:18px;color:var(--gold);}
 
 /* VOICE ORB */
-.voice-orb{display:none;align-items:center;justify-content:center;gap:3px;padding:8px 14px;margin:0 18px 10px;background:rgba(212,165,62,0.05);border:1px solid var(--border-gold);border-radius:8px;}
+.voice-orb{display:none;align-items:center;justify-content:center;gap:3px;padding:10px 16px;margin:0 14px 8px;background:rgba(212,165,62,0.05);border:1px solid var(--border-gold);border-radius:8px;cursor:pointer;user-select:none;transition:background 0.15s;}
+.voice-orb:hover{background:rgba(212,165,62,0.1);}
 .voice-orb.active{display:flex;}
+.voice-orb .pause-hint{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(212,165,62,0.5);letter-spacing:1px;margin-left:10px;}
 .voice-bar{width:3px;border-radius:2px;background:var(--gold);animation:voiceBar 0.8s ease-in-out infinite;}
 .voice-bar:nth-child(1){height:8px;animation-delay:0s}.voice-bar:nth-child(2){height:14px;animation-delay:0.1s}.voice-bar:nth-child(3){height:20px;animation-delay:0.2s}.voice-bar:nth-child(4){height:14px;animation-delay:0.3s}.voice-bar:nth-child(5){height:8px;animation-delay:0.4s}.voice-bar:nth-child(6){height:16px;animation-delay:0.15s}.voice-bar:nth-child(7){height:10px;animation-delay:0.25s}
 @keyframes voiceBar{0%,100%{transform:scaleY(0.4);opacity:0.5}50%{transform:scaleY(1);opacity:1}}
@@ -755,10 +757,11 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         </div>
       </div>
     </div>
-    <div class="voice-orb" id="voiceOrb">
+    <div class="voice-orb" id="voiceOrb" onclick="stopAllAudio()" title="Click to stop">
       <div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div>
       <div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div>
       <span class="voice-label">SPEAKING</span>
+      <span class="pause-hint">■ STOP</span>
     </div>
     <div class="chat-input-area">
       <div class="quick-prompts">
@@ -982,10 +985,11 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
       <div class="explore-messages" id="exploreMessages">
         <div class="msg nexa"><div class="msg-label">Nexa OS</div><div class="msg-bubble">Business mode active. Drop a product niche, paste Everbee data, or ask me to evaluate anything against your priority stack.</div></div>
       </div>
-      <div class="voice-orb" id="voiceOrbExplore">
+      <div class="voice-orb" id="voiceOrbExplore" onclick="stopAllAudio()" title="Click to stop">
         <div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div>
         <div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div>
         <span class="voice-label">SPEAKING</span>
+        <span class="pause-hint">■ STOP</span>
       </div>
       <div class="explore-input-area">
         <div class="input-row">
@@ -1144,7 +1148,11 @@ function stopAllAudio(){
   if(activeAutoAudio){ activeAutoAudio.pause(); activeAutoAudio=null; }
   if(currentAudio){ currentAudio.pause(); currentAudio=null; }
   speechSynthesis.cancel();
-  if(activeAutoOrb){ const o=document.getElementById(activeAutoOrb); if(o)o.classList.remove('active'); activeAutoOrb=null; }
+  // Hide all orbs
+  ['voiceOrb','voiceOrbExplore'].forEach(id=>{
+    const o=document.getElementById(id); if(o)o.classList.remove('active');
+  });
+  activeAutoOrb=null;
   if(currentSpeakBtn){ const b=document.getElementById(currentSpeakBtn); if(b){b.textContent='🔊';b.classList.remove('playing');} currentSpeakBtn=null; }
 }
 
@@ -1426,7 +1434,14 @@ If today is Monday, announce the Arena boss dramatically in one sentence — inc
   const t=showTyping();
   try{
     const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:500,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages})});
-    const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ Error: '+(d.error?.message||r.status));return;}
+    const d=await r.json();if(!r.ok){t.remove();
+    if(r.status===401||r.status===403||(d.error?.type==='authentication_error')){
+      addMessage('nexa','⚠ API key needed. Tap the key icon to enter your key.');
+      showKeyModal();
+    } else {
+      addMessage('nexa','⚠ Error: '+(d.error?.message||r.status));
+    }
+    return;}
     const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});
     speak(reply,'voiceOrb');
   }catch(e){t.remove();addMessage('nexa','⚠ '+e.message);}
@@ -1802,7 +1817,10 @@ async function sendExplore(){
   if(!NEXAKEY){showKeyModal();return;}
   const inp=document.getElementById('exploreInput'),text=inp.value.trim();if(!text)return;inp.value='';inp.style.height='auto';
   addExploreMsg('user',text);exploreMessages.push({role:'user',content:text});const t=showExploreTyping();
-  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
+  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();
+      if(r.status===401||r.status===403){addExploreMsg('nexa','⚠ API key needed.');showKeyModal();}
+      else{addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));}
+      return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
   catch(e){t.remove();addExploreMsg('nexa','⚠ '+e.message);}
 }
 function addExploreMsg(r,t){
