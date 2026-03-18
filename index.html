@@ -724,6 +724,20 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 
   <!-- COMMAND PANEL -->
   <div class="panel active" id="panel-command">
+
+    <!-- TIME BLOCKS -->
+    <div id="timeBlockSection" style="padding:12px 14px 0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;">⏱ Today's Schedule</div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="buildTimeBlocks()" style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--gold);background:none;border:1px solid rgba(212,165,62,0.25);border-radius:4px;padding:3px 8px;cursor:pointer;">↻ REFRESH</button>
+          <button onclick="toggleTimeBlocks()" style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--text-dim);background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;" id="tbToggleBtn">HIDE</button>
+        </div>
+      </div>
+      <div id="timeBlockList" style="margin-bottom:12px;"></div>
+      <div style="height:1px;background:var(--border);margin-bottom:12px;"></div>
+    </div>
+
     <div class="chat-messages" id="chatMessages">
       <div class="msg nexa">
         <div class="msg-label">Nexa OS</div>
@@ -877,27 +891,75 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         </div>
       </div>
 
-      <div class="section-label">Today's Trading</div>
-      <div class="trading-card">
-        <div class="trading-card-title">Session Log — 30-Day Rebuild</div>
-        <div class="trade-counters">
-          <div class="counter-item"><div class="counter-label">Trades Taken</div><div class="counter-value gold" id="tradeCount">0</div></div>
-          <div class="counter-item"><div class="counter-label">Remaining</div><div class="counter-value ok" id="tradeRemaining">2</div></div>
+      <div class="section-label">Today's Trading — NexaTrade Live</div>
+      <div class="trading-card" id="nexaTradeCard">
+        <!-- Session Status Bar -->
+        <div id="sessionStatusBar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div id="sessionStatusDot" style="display:flex;align-items:center;gap:6px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text-dim);">
+            <div style="width:7px;height:7px;border-radius:50%;background:#444;" id="sessionDot"></div>
+            <span id="sessionStatusLabel">CHECKING...</span>
+          </div>
+          <div id="sessionTimer" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--gold);"></div>
         </div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;">Log result</div>
-        <div class="trade-btns">
-          <div class="trade-btn win" onclick="logTrade('win')">✓ Win</div>
-          <div class="trade-btn loss" onclick="logTrade('loss')">✗ Loss</div>
-          <div class="trade-btn be" onclick="logTrade('be')">— B/E</div>
+        <!-- Session Timer Bar -->
+        <div id="sessionTimerBar" style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-bottom:14px;overflow:hidden;">
+          <div id="sessionTimerFill" style="height:100%;width:0%;background:var(--gold);border-radius:2px;transition:width 0.5s;"></div>
         </div>
-        <div class="rules-check">
-          <div class="rules-label">Rules Followed?</div>
-          <div class="rules-toggle">
-            <button class="toggle-btn yes" id="rulesYes" onclick="setRules(true)">Yes</button>
-            <button class="toggle-btn no" id="rulesNo" onclick="setRules(false)">No</button>
+        <!-- KPI Grid -->
+        <div class="trade-counters" style="grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
+          <div class="counter-item">
+            <div class="counter-label">Today P&L</div>
+            <div class="counter-value" id="nt_todayPnl" style="color:var(--text-dim);">—</div>
+          </div>
+          <div class="counter-item">
+            <div class="counter-label">Trades</div>
+            <div class="counter-value gold" id="nt_tradesCount">—</div>
+          </div>
+          <div class="counter-item">
+            <div class="counter-label">Max Loss</div>
+            <div class="counter-value" id="nt_maxLoss" style="color:var(--text-dim);">—</div>
+          </div>
+          <div class="counter-item">
+            <div class="counter-label">Walk Away</div>
+            <div class="counter-value" id="nt_walkAway" style="color:var(--text-dim);">—</div>
           </div>
         </div>
-        <div id="stopWarning" style="display:none;margin-top:10px;padding:8px 10px;background:rgba(224,85,85,0.1);border:1px solid rgba(224,85,85,0.25);border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--warn);letter-spacing:0.5px;line-height:1.5;"></div>
+        <!-- Limit progress bars -->
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">
+            <span>MAX LOSS USED</span><span id="nt_lossUsedPct">0%</span>
+          </div>
+          <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+            <div id="nt_lossBar" style="height:100%;width:0%;background:#e05555;border-radius:2px;transition:width 0.5s;"></div>
+          </div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">
+            <span>WALK AWAY PROGRESS</span><span id="nt_walkPct">0%</span>
+          </div>
+          <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+            <div id="nt_walkBar" style="height:100%;width:0%;background:var(--gold);border-radius:2px;transition:width 0.5s;"></div>
+          </div>
+        </div>
+        <!-- Alerts -->
+        <div id="nt_alert" style="display:none;padding:8px 10px;border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:0.5px;line-height:1.5;margin-bottom:10px;"></div>
+        <!-- All-time stats -->
+        <div style="display:flex;gap:10px;padding-top:10px;border-top:1px solid var(--border);">
+          <div style="flex:1;text-align:center;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:3px;">ALL-TIME P&L</div>
+            <div id="nt_allTimePnl" style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;color:var(--text-dim);">—</div>
+          </div>
+          <div style="flex:1;text-align:center;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:3px;">WIN RATE</div>
+            <div id="nt_winRate" style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;color:var(--text-dim);">—</div>
+          </div>
+          <div style="flex:1;text-align:center;">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:3px;">AVG R</div>
+            <div id="nt_avgR" style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;color:var(--text-dim);">—</div>
+          </div>
+        </div>
+        <!-- Link to NexaTrade -->
+        <a href="https://nexa-trade-production.up.railway.app" target="_blank" style="display:block;margin-top:12px;padding:8px;border:1px solid rgba(212,165,62,0.2);border-radius:6px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);text-decoration:none;">OPEN NEXATRADE →</a>
       </div>
 
       <div style="height:24px;"></div>
@@ -1276,7 +1338,7 @@ If today is Monday, announce the Arena boss dramatically in one sentence — inc
   messages.push({role:'user',content:prompt});
   const t=showTyping();
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:500,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:500,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages})});
     const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});
     speak(reply,'voiceOrb');
@@ -1343,13 +1405,214 @@ async function syncTradingData(){
   }catch(e){console.warn('Trading sync failed',e);}
 }
 function buildTradingContext(){
-  if(!tradingData){liveTradingContext='';return;}
-  const t=tradingData;
-  const lines=['\n\n─── NEXATRADE DATA ───'];
-  if(t.allTime) lines.push(`All-time P&L: $${(t.allTime.totalPnl||0).toFixed(2)} | Win rate: ${((t.allTime.winRate||0)*100).toFixed(0)}% | ${t.allTime.totalTrades||0} trades`);
-  if(t.thisWeek) lines.push(`This week: $${(t.thisWeek.totalPnl||0).toFixed(2)} (${t.thisWeek.trades||0} trades)`);
-  if(t.openTrades>0) lines.push(`Open trades: ${t.openTrades}`);
-  liveTradingContext=lines.join('\n');
+  const lines=['\n\n─── NEXATRADE LIVE DATA ───'];
+  // Use session data if available
+  if(nexaTradeSession){
+    const s = nexaTradeSession.status || {};
+    const session = nexaTradeSession.session || {};
+    lines.push(`Session: ${s.sessionActive?'ACTIVE — '+s.minutesRemaining+'m remaining':'Closed'}`);
+    lines.push(`Today P&L: $${(s.pnlToday||0).toFixed(2)} | Trades: ${s.tradesCount||0}`);
+    if(s.maxLossHit) lines.push('⚠ MAX LOSS HIT — trading stopped for today');
+    if(s.walkAwayHit) lines.push('✓ Walk away target reached');
+    if(session.marketBias) lines.push(`Market bias: ${session.marketBias}`);
+    if(session.preMarketNotes) lines.push(`Pre-market notes: ${session.preMarketNotes.slice(0,100)}`);
+  }
+  if(tradingData){
+    const t = tradingData;
+    lines.push(`All-time P&L: $${(t.allTimePnl||0).toFixed(2)} | Win rate: ${((t.winRate||0)*100).toFixed(0)}% | ${t.totalTrades||0} trades`);
+    if(t.openTrades>0) lines.push(`Open trades: ${t.openTrades}`);
+  }
+  liveTradingContext = lines.join('\n');
+}
+
+// ══ NEXATRADE LIVE SESSION ══
+let nexaTradeSession = null;
+async function syncNexaTradeSession(){
+  try{
+    const res = await fetch(`${TRADE_URL}/api/sessions/today`);
+    if(!res.ok) return;
+    nexaTradeSession = await res.json();
+    renderNexaTradeCard();
+    buildTradingContext();
+  }catch(e){ console.warn('NexaTrade session sync failed', e); }
+}
+
+function renderNexaTradeCard(){
+  const d = nexaTradeSession;
+  if(!d || !d.status) return;
+  const s = d.status;
+  const fmt = n => '$'+Math.abs(n).toFixed(2);
+  const pnl = s.pnlToday || 0;
+  const pnlEl = document.getElementById('nt_todayPnl');
+  if(pnlEl){
+    pnlEl.textContent = (pnl >= 0 ? '+' : '-') + fmt(pnl);
+    pnlEl.style.color = pnl > 0 ? 'var(--success)' : pnl < 0 ? 'var(--warn)' : 'var(--text-dim)';
+  }
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  set('nt_tradesCount', `${s.tradesCount||0}/${s.maxTradesReached?'MAX':'3'}`);
+  set('nt_maxLoss', fmt(s.maxLossLimit||0));
+  set('nt_walkAway', fmt(s.walkAwayTarget||0));
+
+  // Progress bars
+  const lossUsed = s.maxLossLimit > 0 ? Math.min(Math.abs(Math.min(0,pnl))/s.maxLossLimit*100,100) : 0;
+  const walkPct = s.walkAwayTarget > 0 ? Math.min(Math.max(0,pnl)/s.walkAwayTarget*100,100) : 0;
+  const lb = document.getElementById('nt_lossBar');
+  const wb = document.getElementById('nt_walkBar');
+  const lp = document.getElementById('nt_lossUsedPct');
+  const wp = document.getElementById('nt_walkPct');
+  if(lb) lb.style.width = lossUsed+'%';
+  if(wb) wb.style.width = walkPct+'%';
+  if(lp) lp.textContent = lossUsed.toFixed(0)+'%';
+  if(wp) wp.textContent = walkPct.toFixed(0)+'%';
+
+  // Session status
+  const dot = document.getElementById('sessionDot');
+  const label = document.getElementById('sessionStatusLabel');
+  const timer = document.getElementById('sessionTimer');
+  const fill = document.getElementById('sessionTimerFill');
+  if(s.sessionActive){
+    if(dot) dot.style.background = '#4caf50';
+    if(label){ label.textContent = 'SESSION ACTIVE'; label.style.color = '#4caf50'; }
+    if(timer) timer.textContent = `${s.minutesRemaining}m remaining`;
+    if(fill) fill.style.width = (s.minutesRemaining/120*100)+'%';
+  } else {
+    const now = new Date();
+    const et = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+    const h = et.getHours();
+    if(dot) dot.style.background = '#444';
+    if(h < 9 || (h===9 && et.getMinutes()<30)){
+      if(label){ label.textContent = 'PRE-MARKET'; label.style.color = 'var(--gold)'; }
+      if(timer) timer.textContent = 'Opens 9:30 ET';
+      if(fill) fill.style.width = '0%';
+    } else {
+      if(label){ label.textContent = 'SESSION CLOSED'; label.style.color = 'var(--text-dim)'; }
+      if(timer) timer.textContent = 'Closed 11:30 ET';
+      if(fill) fill.style.width = '0%';
+    }
+  }
+
+  // Alerts
+  const alertEl = document.getElementById('nt_alert');
+  if(alertEl){
+    if(s.maxLossHit){
+      alertEl.style.display='block';
+      alertEl.style.background='rgba(224,85,85,0.1)';
+      alertEl.style.border='1px solid rgba(224,85,85,0.3)';
+      alertEl.style.color='var(--warn)';
+      alertEl.textContent='🛑 MAX DAILY LOSS HIT — Stop trading for today';
+    } else if(s.walkAwayHit){
+      alertEl.style.display='block';
+      alertEl.style.background='rgba(76,175,80,0.1)';
+      alertEl.style.border='1px solid rgba(76,175,80,0.3)';
+      alertEl.style.color='var(--success)';
+      alertEl.textContent='🎯 WALK AWAY TARGET REACHED — Protect your gains';
+    } else {
+      alertEl.style.display='none';
+    }
+  }
+
+  // All-time stats from summary
+  if(d.summary){
+    const ts = d.summary;
+    const allPnl = ts.allTimePnl||0;
+    const allEl = document.getElementById('nt_allTimePnl');
+    if(allEl){
+      allEl.textContent = (allPnl>=0?'+':'-')+'$'+Math.abs(allPnl).toFixed(2);
+      allEl.style.color = allPnl>=0?'var(--success)':'var(--warn)';
+    }
+    const wr = document.getElementById('nt_winRate');
+    if(wr) wr.textContent = ts.winRate ? (ts.winRate*100).toFixed(0)+'%' : '—';
+    const ar = document.getElementById('nt_avgR');
+    if(ar) ar.textContent = ts.avgR ? ts.avgR.toFixed(2)+'R' : '—';
+  }
+}
+
+// ══ TIME BLOCKS ══
+let timeBlocksVisible = true;
+function toggleTimeBlocks(){
+  timeBlocksVisible = !timeBlocksVisible;
+  const list = document.getElementById('timeBlockList');
+  const btn = document.getElementById('tbToggleBtn');
+  if(list) list.style.display = timeBlocksVisible ? 'block' : 'none';
+  if(btn) btn.textContent = timeBlocksVisible ? 'HIDE' : 'SHOW';
+}
+
+function buildTimeBlocks(){
+  const list = document.getElementById('timeBlockList');
+  if(!list) return;
+
+  // Get ET time
+  const now = new Date();
+  const etStr = now.toLocaleString('en-US',{timeZone:'America/New_York'});
+  const et = new Date(etStr);
+  const currentMins = et.getHours()*60 + et.getMinutes();
+
+  // Build blocks from known data
+  const blocks = [];
+
+  // Morning block
+  blocks.push({ time:'6:30', label:'Wake Up · System Boot', icon:'🌅', type:'routine',
+    startMins: 6*60+30, endMins: 7*60 });
+  blocks.push({ time:'7:00', label:'Morning Routine · Family', icon:'☕', type:'routine',
+    startMins: 7*60, endMins: 8*60 });
+
+  // Trading window
+  const sessionActive = nexaTradeSession?.status?.sessionActive;
+  const minsLeft = nexaTradeSession?.status?.minutesRemaining || 0;
+  const tradesToday = nexaTradeSession?.status?.tradesCount || 0;
+  blocks.push({
+    time:'9:30', label:`Trading Window${sessionActive?' — ACTIVE':''}`,
+    icon:'📈', type: sessionActive ? 'active' : 'trading',
+    sub: sessionActive ? `${minsLeft}m remaining · ${tradesToday} trades taken` : 'Opens 9:30 — Closes 11:30 ET',
+    startMins: 9*60+30, endMins: 11*60+30
+  });
+
+  // Add inspections from NexaTrade session watchlist if available
+  // (will be replaced by real calendar data when Alfred is built)
+  if(nexaTradeSession?.session?.preMarketNotes){
+    blocks.push({ time:'—', label:'Pre-market notes logged', icon:'📋', type:'note',
+      sub: nexaTradeSession.session.preMarketNotes.slice(0,60)+'...',
+      startMins: 9*60, endMins: 9*60+30 });
+  }
+
+  blocks.push({ time:'11:30', label:'Session Close · Admin', icon:'📋', type:'routine',
+    startMins: 11*60+30, endMins: 12*60 });
+  blocks.push({ time:'12:00', label:'Lunch · Reset', icon:'🍽', type:'routine',
+    startMins: 12*60, endMins: 13*60 });
+  blocks.push({ time:'1:00', label:'Build / Deep Work', icon:'⚙️', type:'build',
+    startMins: 13*60, endMins: 15*60 });
+  blocks.push({ time:'3:00', label:'Family Time · Lily', icon:'👶', type:'family',
+    startMins: 15*60, endMins: 17*60 });
+  blocks.push({ time:'5:00', label:'Dinner · Evening Wind Down', icon:'🌙', type:'routine',
+    startMins: 17*60, endMins: 21*60 });
+
+  // Sort and render
+  const typeColors = {
+    active:  { bg:'rgba(76,175,80,0.1)',  border:'rgba(76,175,80,0.3)',  dot:'#4caf50' },
+    trading: { bg:'rgba(212,165,62,0.08)', border:'rgba(212,165,62,0.2)', dot:'var(--gold)' },
+    build:   { bg:'rgba(91,155,213,0.08)', border:'rgba(91,155,213,0.2)', dot:'#5b9bd5' },
+    family:  { bg:'rgba(180,100,220,0.08)',border:'rgba(180,100,220,0.2)',dot:'#b464dc' },
+    routine: { bg:'rgba(255,255,255,0.02)', border:'rgba(255,255,255,0.06)', dot:'#444' },
+    note:    { bg:'rgba(212,165,62,0.05)', border:'rgba(212,165,62,0.1)', dot:'var(--gold)' },
+  };
+
+  list.innerHTML = blocks.map(b => {
+    const c = typeColors[b.type] || typeColors.routine;
+    const isPast = b.endMins < currentMins;
+    const isCurrent = b.startMins <= currentMins && b.endMins > currentMins;
+    const opacity = isPast ? '0.35' : '1';
+    const leftBorder = isCurrent ? `border-left:2px solid ${c.dot};` : '';
+    return `<div style="display:flex;gap:10px;padding:8px 10px;border-radius:6px;background:${c.bg};border:1px solid ${c.border};${leftBorder}margin-bottom:6px;opacity:${opacity};">
+      <div style="width:36px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0;padding-top:2px;">${b.time}</div>
+      <div style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;margin-top:4px;"></div>
+      <div style="flex:1;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:${isCurrent?'#fff':'var(--text)'};font-weight:${isCurrent?'700':'400'};">
+          ${b.icon} ${b.label}${isCurrent?' ◀':isPast?' ✓':''}
+        </div>
+        ${b.sub ? `<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:2px;">${b.sub}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function syncMealData(){
@@ -1383,6 +1646,7 @@ async function syncFinanceData(){
     syncFitnessData();
     syncFamilyData();
     syncTradingData();
+    syncNexaTradeSession();
     checkQuestRefresh();
   }catch(e){meta.textContent='Sync failed';document.getElementById('financeContent').innerHTML=`<div class="finance-error">⚠ Could not reach Nexa Finance.<br>Check Railway is running.</div>`;}
   finally{btn.classList.remove('syncing');}
@@ -1422,6 +1686,8 @@ function buildFinanceContext(){
   liveFinanceContext=['\n\n─── LIVE NEXA FINANCE DATA ───',`Cash: $${(d.cash?.total??0).toFixed(2)}`,`Weekly income: $${(d.income?.totalWeekly??0).toFixed(2)} | Monthly est: $${(d.income?.estimatedMonthly??0).toFixed(2)}`,`Monthly bills: $${(d.budget?.monthlyFixedBills??0).toFixed(2)}`,`Spending 30d: $${(d.spending?.last30Days??0).toFixed(2)}`,`Total debt: $${(d.debts?.totalRemaining??0).toFixed(2)} (${d.debts?.count??0} accounts)`,...(d.debts?.items??[]).map(x=>`  • ${x.name}: $${parseFloat(x.remainingBalance).toFixed(2)} @ ${x.apr}% APR`)].join('\n');
 }
 setInterval(()=>{if(NEXAKEY)syncFinanceData();},5*60*1000);
+setInterval(buildTimeBlocks, 5*60*1000);
+setInterval(()=>{if(nexaTradeSession)renderNexaTradeCard();},60*1000);
 
 // ══ TRADING ══
 let trades=[],debts=[];
@@ -1449,7 +1715,7 @@ async function sendExplore(){
   if(!NEXAKEY){showKeyModal();return;}
   const inp=document.getElementById('exploreInput'),text=inp.value.trim();if(!text)return;inp.value='';inp.style.height='auto';
   addExploreMsg('user',text);exploreMessages.push({role:'user',content:text});const t=showExploreTyping();
-  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
+  try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1024,system:EXP_PERSONA[exploreMode]+'\n\n'+NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages:exploreMessages})});const d=await r.json();if(!r.ok){t.remove();addExploreMsg('nexa','⚠ '+(d.error?.message||r.status));return;}const reply=d.content?.[0]?.text||'Error.';t.remove();addExploreMsg('nexa',reply);exploreMessages.push({role:'assistant',content:reply});if(exploreMessages.length>20)exploreMessages=exploreMessages.slice(-20);speak(reply,'voiceOrbExplore');}
   catch(e){t.remove();addExploreMsg('nexa','⚠ '+e.message);}
 }
 function addExploreMsg(r,t){const c=document.getElementById('exploreMessages'),m=document.createElement('div');m.className='msg '+r;m.innerHTML=`<div class="msg-label">${r==='nexa'?'Nexa OS':'You'}</div><div class="msg-bubble">${renderMarkdown(t)}</div>`;c.appendChild(m);c.scrollTop=c.scrollHeight;}
@@ -1515,7 +1781,7 @@ async function sendMessage(){
   addMessage('user',text);messages.push({role:'user',content:text});const t=showTyping();
   try{
     const gc=northStar.goal?`\n\nNorth Star: "${northStar.goal}" (target: ${northStar.date||'none'}). Streak: ${streak.count} days.`:'';
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext+gc,messages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext+gc,messages})});
     const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ API Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});if(messages.length>20)messages=messages.slice(-20);
     speak(reply,'voiceOrb');
@@ -1798,7 +2064,7 @@ async function sendPlanMessage(){
   const t=showPlanTyping();
   try{
     const sys=PLAN_PERSONA+(liveFinanceContext?'\n\nContext about their finances:'+liveFinanceContext:'');
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,system:sys,messages:planMessages})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:4000,system:sys,messages:planMessages})});
     const d=await r.json();
     if(!r.ok){t.remove();addPlanMsg('nexa','⚠ Error: '+(d.error?.message||r.status));return;}
     const reply=d.content?.[0]?.text||'Error.';
@@ -2169,7 +2435,7 @@ Respond ONLY with a JSON array, no markdown, no extra text:
     const r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:600,messages:[{role:'user',content:prompt}]})
     });
     const d=await r.json();
     if(!r.ok)throw new Error(d.error?.message||r.status);
@@ -2355,7 +2621,7 @@ async function fetchBossName(stat, rage){
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-6', max_tokens:30,
+        model:'claude-sonnet-4-5', max_tokens:30,
         messages:[{role:'user',content:`Generate a short RPG villain name (3-5 words) for a boss that represents the sin of ${statFlavor[stat]}. Rage level: ${rage} out of 4 — higher rage = more menacing name. Return ONLY the name, nothing else. No quotes, no punctuation at the end.`}]
       })
     });
@@ -2532,6 +2798,8 @@ window.addEventListener('load',()=>{
   syncFitnessData();
   syncFamilyData();
   syncTradingData();
+  syncNexaTradeSession();
+  setTimeout(buildTimeBlocks, 800);
   loadCampaignCloud();
 });
 </script>
