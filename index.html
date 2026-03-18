@@ -1085,7 +1085,7 @@ function checkQuestRefresh(){
 
 // ══ VOICE ══
 let voiceEnabled=load('voice',false);
-function toggleVoice(){voiceEnabled=!voiceEnabled;save('voice',voiceEnabled);updateVoiceUI();if(!voiceEnabled)speechSynthesis.cancel();}
+function toggleVoice(){voiceEnabled=!voiceEnabled;save('voice',voiceEnabled);updateVoiceUI();if(!voiceEnabled)stopAllAudio();}
 function updateVoiceUI(){
   const btn=document.getElementById('voiceBtn');
   btn.classList.toggle('active',voiceEnabled);
@@ -1093,22 +1093,40 @@ function updateVoiceUI(){
     ?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg> ON`
     :`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
 }
+// Global audio tracker for pause/stop
+let activeAutoAudio = null;
+let activeAutoOrb = null;
+
 async function speak(text,orbId='voiceOrb'){
   if(!voiceEnabled)return;
   const clean=text.replace(/<[^>]+>/g,'').replace(/\*\*/g,'').replace(/\*/g,'').replace(/#{1,3} /g,'').trim();
   if(!clean)return;
+  // Stop any currently playing auto audio
+  if(activeAutoAudio){ activeAutoAudio.pause(); activeAutoAudio=null; }
+  if(activeAutoOrb){ const o=document.getElementById(activeAutoOrb); if(o)o.classList.remove('active'); }
   const orb=document.getElementById(orbId);
   if(orb)orb.classList.add('active');
+  activeAutoOrb=orbId;
   try{
     const res=await fetch(`${FINANCE_URL}/api/ai/speak`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:clean.slice(0,2500)})});
     if(!res.ok)throw new Error('TTS failed');
     const blob=await res.blob();
     const url=URL.createObjectURL(blob);
     const audio=new Audio(url);
-    audio.onended=()=>{if(orb)orb.classList.remove('active');URL.revokeObjectURL(url);};
-    audio.onerror=()=>{if(orb)orb.classList.remove('active');};
+    activeAutoAudio=audio;
+    audio.onended=()=>{
+      if(orb)orb.classList.remove('active');
+      URL.revokeObjectURL(url);
+      activeAutoAudio=null; activeAutoOrb=null;
+    };
+    audio.onerror=()=>{
+      if(orb)orb.classList.remove('active');
+      activeAutoAudio=null; activeAutoOrb=null;
+    };
     await audio.play();
   }catch(e){
+    if(orb)orb.classList.remove('active');
+    activeAutoAudio=null; activeAutoOrb=null;
     speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(clean);
     u.rate=0.95;u.pitch=1.0;
@@ -1119,6 +1137,15 @@ async function speak(text,orbId='voiceOrb'){
     u.onend=()=>{if(orb)orb.classList.remove('active');};
     setTimeout(()=>speechSynthesis.speak(u),150);
   }
+}
+
+// Stop all audio (called when voice toggled off)
+function stopAllAudio(){
+  if(activeAutoAudio){ activeAutoAudio.pause(); activeAutoAudio=null; }
+  if(currentAudio){ currentAudio.pause(); currentAudio=null; }
+  speechSynthesis.cancel();
+  if(activeAutoOrb){ const o=document.getElementById(activeAutoOrb); if(o)o.classList.remove('active'); activeAutoOrb=null; }
+  if(currentSpeakBtn){ const b=document.getElementById(currentSpeakBtn); if(b){b.textContent='🔊';b.classList.remove('playing');} currentSpeakBtn=null; }
 }
 
 // ══ MESSAGE PLAYBACK ══
