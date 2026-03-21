@@ -900,7 +900,10 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         </select>
         <button onclick="addCustomBlock()" style="background:rgba(212,165,62,0.1);border:1px solid rgba(212,165,62,0.3);border-radius:6px;padding:8px;color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;">ADD BLOCK</button>
       </div>
-      <button onclick="clearCustomBlocks()" style="width:100%;background:none;border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;margin-bottom:24px;">CLEAR CUSTOM BLOCKS</button>
+      <div style="display:flex;gap:8px;margin-bottom:24px;">
+        <button onclick="clearCustomBlocks()" style="flex:1;background:none;border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;">CLEAR CUSTOM</button>
+        <button onclick="resetToDefaultBlocks()" style="flex:1;background:none;border:1px solid rgba(212,165,62,0.2);border-radius:6px;padding:6px;color:var(--gold-dim);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;">RESET DEFAULTS</button>
+      </div>
     </div>
   </div>
 
@@ -917,6 +920,31 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         <div id="financeContent">
           <div class="finance-loading"><span>Connecting to Nexa Finance</span><div class="finance-loading-dots"><span></span><span></span><span></span></div></div>
         </div>
+      </div>
+
+      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>💰 Weekly Income</span>
+        <span id="incomeWeekLabel" style="font-size:9px;color:var(--text-dim);"></span>
+      </div>
+      <div class="trading-card" id="incomeLogCard">
+        <div id="incomeCurrentDisplay" style="margin-bottom:12px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);">Loading...</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">MY INCOME</div>
+            <input id="myIncomeInput" type="number" step="0.01" placeholder="0.00"
+              style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;box-sizing:border-box;"/>
+          </div>
+          <div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">WIFE'S INCOME</div>
+            <input id="spouseIncomeInput" type="number" step="0.01" placeholder="0.00"
+              style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;box-sizing:border-box;"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="logWeeklyIncome()" style="flex:1;padding:10px;background:rgba(212,165,62,0.15);border:1px solid rgba(212,165,62,0.3);border-radius:6px;color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;">✓ LOG THIS WEEK</button>
+          <button onclick="loadIncomeData()" style="padding:10px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;">↻</button>
+        </div>
+        <div id="incomeLogStatus" style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:10px;text-align:center;display:none;"></div>
       </div>
 
       <div class="section-label">Today's Trading — NexaTrade Live</div>
@@ -1246,6 +1274,82 @@ async function speakMessage(btnId, text){
   }
 }
 
+
+// ══ WEEKLY INCOME LOGGER ══
+function getWeekStart(){
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day===0 ? -6 : 1); // Monday
+  const mon = new Date(d.setDate(diff));
+  return mon.toISOString().split('T')[0];
+}
+
+async function loadIncomeData(){
+  try{
+    const res = await fetch(`${FINANCE_URL}/api/income/latest`);
+    if(!res.ok) return;
+    const d = await res.json();
+    const display = document.getElementById('incomeCurrentDisplay');
+    const weekLabel = document.getElementById('incomeWeekLabel');
+    const weekStart = getWeekStart();
+    if(weekLabel) weekLabel.textContent = `Week of ${weekStart}`;
+    if(d && (d.myIncome || d.spouseIncome)){
+      const my = parseFloat(d.myIncome||0).toFixed(2);
+      const spouse = parseFloat(d.spouseIncome||0).toFixed(2);
+      const total = (parseFloat(d.myIncome||0)+parseFloat(d.spouseIncome||0)).toFixed(2);
+      if(display) display.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;">
+          <div><div style="font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">ME</div><div style="color:var(--success);font-size:13px;font-weight:700;">$${my}</div></div>
+          <div><div style="font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">WIFE</div><div style="color:var(--success);font-size:13px;font-weight:700;">$${spouse}</div></div>
+          <div><div style="font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">TOTAL</div><div style="color:var(--gold);font-size:13px;font-weight:700;">$${total}</div></div>
+        </div>
+        ${d.carriedForward ? '<div style="font-size:9px;color:var(--text-dim);text-align:center;margin-top:6px;">↩ Carried from last week — tap LOG to update</div>' : '<div style="font-size:9px;color:var(--success);text-align:center;margin-top:6px;">✓ Logged this week</div>'}
+      `;
+      // Pre-fill inputs if carried forward
+      if(d.carriedForward){
+        const mi = document.getElementById('myIncomeInput');
+        const si = document.getElementById('spouseIncomeInput');
+        if(mi) mi.value = my;
+        if(si) si.value = spouse;
+      }
+    } else {
+      if(display) display.innerHTML = '<div style="color:var(--text-dim);font-size:11px;text-align:center;">No income logged yet this week</div>';
+    }
+  }catch(e){
+    const display = document.getElementById('incomeCurrentDisplay');
+    if(display) display.innerHTML = '<div style="color:var(--text-dim);font-size:11px;">Could not load income data</div>';
+  }
+}
+
+async function logWeeklyIncome(){
+  const myVal = parseFloat(document.getElementById('myIncomeInput')?.value||'0');
+  const spouseVal = parseFloat(document.getElementById('spouseIncomeInput')?.value||'0');
+  const status = document.getElementById('incomeLogStatus');
+
+  if(!myVal && !spouseVal){
+    if(status){ status.style.display='block'; status.style.color='var(--warn)'; status.textContent='⚠ Enter at least one income amount'; }
+    return;
+  }
+
+  if(status){ status.style.display='block'; status.style.color='var(--text-dim)'; status.textContent='Logging...'; }
+
+  try{
+    const weekStartDate = getWeekStart();
+    const res = await fetch(`${FINANCE_URL}/api/income`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ weekStartDate, myIncome: myVal.toFixed(2), spouseIncome: spouseVal.toFixed(2) })
+    });
+    if(!res.ok) throw new Error('Failed to log');
+    if(status){ status.style.display='block'; status.style.color='var(--success)'; status.textContent=`✓ Logged — $${(myVal+spouseVal).toFixed(2)} total this week`; }
+    // Clear inputs and reload
+    document.getElementById('myIncomeInput').value='';
+    document.getElementById('spouseIncomeInput').value='';
+    setTimeout(()=>{ if(status) status.style.display='none'; loadIncomeData(); syncFinanceData(); }, 2000);
+  }catch(e){
+    if(status){ status.style.display='block'; status.style.color='var(--warn)'; status.textContent='⚠ Could not log income. Try again.'; }
+  }
+}
 
 // ══ NORTH STAR ══
 let northStar=load('northStar',{goal:'',date:''});
@@ -1672,17 +1776,28 @@ function addCustomBlock(){
   const label = document.getElementById('tbLabel')?.value?.trim();
   const type = document.getElementById('tbType')?.value || 'routine';
   if(!time||!label) return;
-  const h = parseInt(time.split(':')[0]);
-  const m = parseInt(time.split(':')[1]||'0');
-  customBlocks.push({ time, label, type, icon:'📌', startMins: h*60+m, endMins: h*60+m+60, custom:true });
-  localStorage.setItem('nexa_custom_blocks', JSON.stringify(customBlocks));
+  const h = parseInt(time.split(':')[0])||0;
+  const m = parseInt(time.split(':')[1]||'0')||0;
+  const typeIcons = { inspection:'🏠', build:'⚙️', family:'👶', trading:'📈', routine:'📋' };
+  const newBlock = {
+    id: 'custom_'+Date.now(),
+    time, label, type,
+    icon: typeIcons[type] || '📌',
+    startMins: h*60+m,
+    endMins: h*60+m+60,
+    custom:true
+  };
+  const blocks = getStoredBlocks();
+  blocks.push(newBlock);
+  saveStoredBlocks(blocks);
   document.getElementById('tbTime').value='';
   document.getElementById('tbLabel').value='';
   buildTimeBlocks();
 }
 function clearCustomBlocks(){
-  customBlocks=[];
-  localStorage.removeItem('nexa_custom_blocks');
+  // Only clear custom blocks, keep defaults
+  const blocks = getStoredBlocks().filter(b => b.isDefault);
+  saveStoredBlocks(blocks);
   buildTimeBlocks();
 }
 function toggleTimeBlocks(){
@@ -1693,90 +1808,117 @@ function toggleTimeBlocks(){
   if(btn) btn.textContent = timeBlocksVisible ? 'HIDE' : 'SHOW';
 }
 
+// Default blocks stored in localStorage so they're editable
+const DEFAULT_BLOCKS = [
+  { id:'def_1', time:'6:30', label:'Wake Up · System Boot', icon:'🌅', type:'routine', startMins:390, endMins:420, isDefault:true },
+  { id:'def_2', time:'7:00', label:'Morning Routine · Family', icon:'☕', type:'routine', startMins:420, endMins:480, isDefault:true },
+  { id:'def_3', time:'12:00', label:'Lunch · Reset', icon:'🍽', type:'routine', startMins:720, endMins:780, isDefault:true },
+  { id:'def_4', time:'1:00', label:'Build / Deep Work', icon:'⚙️', type:'build', startMins:780, endMins:900, isDefault:true },
+  { id:'def_5', time:'3:00', label:'Family Time · Lily', icon:'👶', type:'family', startMins:900, endMins:1020, isDefault:true },
+  { id:'def_6', time:'5:00', label:'Dinner · Evening Wind Down', icon:'🌙', type:'routine', startMins:1020, endMins:1260, isDefault:true },
+];
+
+function getStoredBlocks(){
+  const stored = localStorage.getItem('nexa_all_blocks');
+  if(stored){ try{ return JSON.parse(stored); }catch(e){} }
+  // First run — seed with defaults
+  localStorage.setItem('nexa_all_blocks', JSON.stringify(DEFAULT_BLOCKS));
+  return [...DEFAULT_BLOCKS];
+}
+
+function saveStoredBlocks(blocks){
+  localStorage.setItem('nexa_all_blocks', JSON.stringify(blocks));
+}
+
+function deleteTimeBlock(id){
+  const blocks = getStoredBlocks().filter(b => b.id !== id);
+  saveStoredBlocks(blocks);
+  buildTimeBlocks();
+}
+
+function editTimeBlock(id){
+  const blocks = getStoredBlocks();
+  const b = blocks.find(x => x.id === id);
+  if(!b) return;
+  const newLabel = prompt('Edit block label:', b.label);
+  if(newLabel === null) return;
+  const newTime = prompt('Edit time:', b.time);
+  if(newTime === null) return;
+  b.label = newLabel.trim() || b.label;
+  b.time = newTime.trim() || b.time;
+  const h = parseInt(b.time.split(':')[0])||0;
+  const m = parseInt(b.time.split(':')[1]||'0')||0;
+  b.startMins = h*60+m;
+  b.endMins = h*60+m+60;
+  saveStoredBlocks(blocks);
+  buildTimeBlocks();
+}
+
 function buildTimeBlocks(){
   const list = document.getElementById('timeBlockList');
   if(!list) return;
 
-  // Get ET time
+  // Show last refreshed time
   const now = new Date();
   const etStr = now.toLocaleString('en-US',{timeZone:'America/New_York'});
   const et = new Date(etStr);
   const currentMins = et.getHours()*60 + et.getMinutes();
+  const refreshed = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
 
-  // Build blocks from known data
-  const blocks = [];
+  // Update refresh button to show timestamp
+  const refreshBtn = document.querySelector('[onclick="buildTimeBlocks()"]');
+  if(refreshBtn) refreshBtn.textContent = '↻ ' + refreshed;
 
-  // Morning block
-  blocks.push({ time:'6:30', label:'Wake Up · System Boot', icon:'🌅', type:'routine',
-    startMins: 6*60+30, endMins: 7*60 });
-  blocks.push({ time:'7:00', label:'Morning Routine · Family', icon:'☕', type:'routine',
-    startMins: 7*60, endMins: 8*60 });
+  // Get all blocks (stored defaults + any live trading session)
+  const allBlocks = getStoredBlocks();
 
-  // Trading window
+  // Add live trading session block if active
   const sessionActive = nexaTradeSession?.status?.sessionActive;
-  const minsLeft = nexaTradeSession?.status?.minutesRemaining || 0;
-  const tradesToday = nexaTradeSession?.status?.tradesCount || 0;
-  blocks.push({
-    time:'9:30', label:`Trading Window${sessionActive?' — ACTIVE':''}`,
-    icon:'📈', type: sessionActive ? 'active' : 'trading',
-    sub: sessionActive ? `${minsLeft}m remaining · ${tradesToday} trades taken` : 'Opens 9:30 — Closes 11:30 ET',
-    startMins: 9*60+30, endMins: 11*60+30
-  });
-
-  // Add inspections from NexaTrade session watchlist if available
-  // (will be replaced by real calendar data when Alfred is built)
-  if(nexaTradeSession?.session?.preMarketNotes){
-    blocks.push({ time:'—', label:'Pre-market notes logged', icon:'📋', type:'note',
-      sub: nexaTradeSession.session.preMarketNotes.slice(0,60)+'...',
-      startMins: 9*60, endMins: 9*60+30 });
+  if(sessionActive){
+    const minsLeft = nexaTradeSession?.status?.minutesRemaining || 0;
+    const tradesToday = nexaTradeSession?.status?.tradesCount || 0;
+    allBlocks.push({
+      id:'live_trading', time:'9:30', label:'Trading Window — ACTIVE',
+      icon:'📈', type:'active',
+      sub:`${minsLeft}m remaining · ${tradesToday} trades taken`,
+      startMins: 9*60+30, endMins: 11*60+30, isLive:true
+    });
   }
 
-  blocks.push({ time:'11:30', label:'Session Close · Admin', icon:'📋', type:'routine',
-    startMins: 11*60+30, endMins: 12*60 });
-  blocks.push({ time:'12:00', label:'Lunch · Reset', icon:'🍽', type:'routine',
-    startMins: 12*60, endMins: 13*60 });
-  blocks.push({ time:'1:00', label:'Build / Deep Work', icon:'⚙️', type:'build',
-    startMins: 13*60, endMins: 15*60 });
-  blocks.push({ time:'3:00', label:'Family Time · Lily', icon:'👶', type:'family',
-    startMins: 15*60, endMins: 17*60 });
-  blocks.push({ time:'5:00', label:'Dinner · Evening Wind Down', icon:'🌙', type:'routine',
-    startMins: 17*60, endMins: 21*60 });
+  // Sort by start time
+  allBlocks.sort((a,b) => (a.startMins||0)-(b.startMins||0));
 
-  // Sort and render
   const typeColors = {
-    active:  { bg:'rgba(76,175,80,0.1)',  border:'rgba(76,175,80,0.3)',  dot:'#4caf50' },
-    trading: { bg:'rgba(212,165,62,0.08)', border:'rgba(212,165,62,0.2)', dot:'var(--gold)' },
-    build:   { bg:'rgba(91,155,213,0.08)', border:'rgba(91,155,213,0.2)', dot:'#5b9bd5' },
-    family:  { bg:'rgba(180,100,220,0.08)',border:'rgba(180,100,220,0.2)',dot:'#b464dc' },
-    routine: { bg:'rgba(255,255,255,0.02)', border:'rgba(255,255,255,0.06)', dot:'#444' },
-    note:    { bg:'rgba(212,165,62,0.05)', border:'rgba(212,165,62,0.1)', dot:'var(--gold)' },
+    active:     { bg:'rgba(76,175,80,0.1)',   border:'rgba(76,175,80,0.3)',  dot:'#4caf50' },
+    trading:    { bg:'rgba(212,165,62,0.08)', border:'rgba(212,165,62,0.2)', dot:'var(--gold)' },
+    build:      { bg:'rgba(91,155,213,0.08)', border:'rgba(91,155,213,0.2)', dot:'#5b9bd5' },
+    family:     { bg:'rgba(180,100,220,0.08)',border:'rgba(180,100,220,0.2)',dot:'#b464dc' },
+    routine:    { bg:'rgba(255,255,255,0.02)', border:'rgba(255,255,255,0.06)', dot:'#444' },
+    inspection: { bg:'rgba(212,165,62,0.06)', border:'rgba(212,165,62,0.15)',dot:'var(--gold)' },
+    note:       { bg:'rgba(212,165,62,0.05)', border:'rgba(212,165,62,0.1)', dot:'var(--gold)' },
   };
 
-  // Merge custom blocks
-  customBlocks = JSON.parse(localStorage.getItem('nexa_custom_blocks')||'[]');
-  const typeIcons = { inspection:'🏠', build:'⚙️', family:'👶', trading:'📈', routine:'📋' };
-  customBlocks.forEach(b => {
-    b.icon = b.icon || typeIcons[b.type] || '📌';
-    blocks.push(b);
-  });
-  // Sort by start time
-  blocks.sort((a,b) => (a.startMins||0)-(b.startMins||0));
-
-  list.innerHTML = blocks.map(b => {
+  list.innerHTML = allBlocks.map(b => {
     const c = typeColors[b.type] || typeColors.routine;
     const isPast = b.endMins < currentMins;
     const isCurrent = b.startMins <= currentMins && b.endMins > currentMins;
     const opacity = isPast ? '0.35' : '1';
     const leftBorder = isCurrent ? `border-left:2px solid ${c.dot};` : '';
-    return `<div style="display:flex;gap:10px;padding:8px 10px;border-radius:6px;background:${c.bg};border:1px solid ${c.border};${leftBorder}margin-bottom:6px;opacity:${opacity};">
+    const editBtns = !b.isLive ? `
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button onclick="editTimeBlock('${b.id}')" style="background:none;border:1px solid var(--border);border-radius:3px;padding:1px 5px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:8px;cursor:pointer;letter-spacing:0.5px;" title="Edit">✎</button>
+        <button onclick="deleteTimeBlock('${b.id}')" style="background:none;border:1px solid rgba(224,85,85,0.2);border-radius:3px;padding:1px 5px;color:var(--warn);font-family:'Share Tech Mono',monospace;font-size:8px;cursor:pointer;opacity:0.6;" title="Delete">✕</button>
+      </div>` : '';
+    return `<div style="display:flex;gap:10px;padding:8px 10px;border-radius:6px;background:${c.bg};border:1px solid ${c.border};${leftBorder}margin-bottom:6px;opacity:${opacity};align-items:center;">
       <div style="width:36px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0;padding-top:2px;">${b.time}</div>
-      <div style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;margin-top:4px;"></div>
+      <div style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;margin-top:2px;"></div>
       <div style="flex:1;">
         <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:${isCurrent?'#fff':'var(--text)'};font-weight:${isCurrent?'700':'400'};">
           ${b.icon} ${b.label}${isCurrent?' ◀':isPast?' ✓':''}
         </div>
         ${b.sub ? `<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:2px;">${b.sub}</div>` : ''}
       </div>
+      ${editBtns}
     </div>`;
   }).join('');
 }
@@ -1944,6 +2086,7 @@ function switchPanel(n,b){
   if(b)b.classList.add('active');
   if(n==='goals') renderArena();
   if(n==='schedule') setTimeout(buildTimeBlocks, 100);
+  if(n==='finance') loadIncomeData();
 }
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
 function quickPrompt(t){document.getElementById('chatInput').value=t;sendMessage();}
@@ -3000,6 +3143,7 @@ window.addEventListener('load',()=>{
   syncTradingData();
   syncNexaTradeSession();
   setTimeout(buildTimeBlocks, 800);
+  setTimeout(loadIncomeData, 1000);
   loadCampaignCloud();
 });
 </script>
