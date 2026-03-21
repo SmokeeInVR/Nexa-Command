@@ -725,7 +725,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule
       </button>
       <button class="nav-btn" onclick="switchPanel('finance',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Finance
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Status
       </button>
       <button class="nav-btn" onclick="switchPanel('explore',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Explore
@@ -922,31 +922,6 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         </div>
       </div>
 
-      <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">
-        <span>💰 Weekly Income</span>
-        <span id="incomeWeekLabel" style="font-size:9px;color:var(--text-dim);"></span>
-      </div>
-      <div class="trading-card" id="incomeLogCard">
-        <div id="incomeCurrentDisplay" style="margin-bottom:12px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);">Loading...</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-          <div>
-            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">MY INCOME</div>
-            <input id="myIncomeInput" type="number" step="0.01" placeholder="0.00"
-              style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;box-sizing:border-box;"/>
-          </div>
-          <div>
-            <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">WIFE'S INCOME</div>
-            <input id="spouseIncomeInput" type="number" step="0.01" placeholder="0.00"
-              style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;box-sizing:border-box;"/>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="logWeeklyIncome()" style="flex:1;padding:10px;background:rgba(212,165,62,0.15);border:1px solid rgba(212,165,62,0.3);border-radius:6px;color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;">✓ LOG THIS WEEK</button>
-          <button onclick="loadIncomeData()" style="padding:10px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;">↻</button>
-        </div>
-        <div id="incomeLogStatus" style="margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:10px;text-align:center;display:none;"></div>
-      </div>
-
       <div class="section-label">Today's Trading — NexaTrade Live</div>
       <div class="trading-card" id="nexaTradeCard">
         <!-- Session Status Bar -->
@@ -1016,6 +991,15 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         </div>
         <!-- Link to NexaTrade -->
         <a href="https://nexa-trade-production.up.railway.app" target="_blank" style="display:block;margin-top:12px;padding:8px;border:1px solid rgba(212,165,62,0.2);border-radius:6px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--gold);text-decoration:none;">OPEN NEXATRADE →</a>
+      </div>
+
+      <!-- FITNESS OVERVIEW CARD -->
+      <div class="section-label">NexaFit — Today</div>
+      <div class="trading-card" id="nexaFitCard">
+        <div id="nexaFitContent">
+          <div class="finance-loading"><span>Connecting to NexaFit</span><div class="finance-loading-dots"><span></span><span></span><span></span></div></div>
+        </div>
+        <a href="https://nexa-fitness.vercel.app" target="_blank" style="display:block;margin-top:12px;padding:8px;border:1px solid rgba(92,184,92,0.2);border-radius:6px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:#5cb85c;text-decoration:none;">OPEN NEXAFIT →</a>
       </div>
 
       <div style="height:24px;"></div>
@@ -1274,6 +1258,73 @@ async function speakMessage(btnId, text){
   }
 }
 
+
+// ══ NEXAFIT OVERVIEW CARD ══
+function renderNexaFitCard(){
+  const el = document.getElementById('nexaFitContent');
+  if(!el) return;
+  const f = fitnessData;
+  if(!f){
+    el.innerHTML='<div class="finance-error">⚠ Could not reach NexaFit.<br>Open the app to sync data.</div>';
+    return;
+  }
+  const water = f.waterToday||0;
+  const waterGoal = f.waterGoal||8;
+  const waterPct = Math.min(Math.round(water/waterGoal*100),100);
+  const workouts = f.weeklyCount||0;
+  const workoutGoal = 4;
+  const workoutPct = Math.min(Math.round(workouts/workoutGoal*100),100);
+  const streak = f.streak||0;
+  const todayWorkout = f.todayWorkout||null;
+
+  el.innerHTML = `
+    <!-- Today's workout status -->
+    <div style="margin-bottom:14px;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:5px;">TODAY'S WORKOUT</div>
+      ${todayWorkout
+        ? `<div style="font-size:13px;font-weight:600;color:var(--success);">✓ ${todayWorkout}</div>`
+        : `<div style="font-size:13px;color:var(--text-dim);">No workout logged yet</div>`
+      }
+    </div>
+
+    <!-- Stats grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center;">
+        <div style="font-size:18px;margin-bottom:3px;">💧</div>
+        <div style="font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:${water>=waterGoal?'var(--success)':'var(--gold)'};">${water}/${waterGoal}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);">glasses</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center;">
+        <div style="font-size:18px;margin-bottom:3px;">🏋️</div>
+        <div style="font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--gold);">${workouts}/${workoutGoal}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);">this week</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:10px 8px;text-align:center;">
+        <div style="font-size:18px;margin-bottom:3px;">${streak>0?'🔥':'💤'}</div>
+        <div style="font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:${streak>0?'var(--gold)':'var(--text-dim)'};">${streak}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);">streak</div>
+      </div>
+    </div>
+
+    <!-- Progress bars -->
+    <div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">
+        <span>WATER</span><span>${waterPct}%</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+        <div style="height:100%;width:${waterPct}%;background:${water>=waterGoal?'var(--success)':'var(--gold)'};border-radius:2px;transition:width 0.5s;"></div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px;">
+        <span>WEEKLY WORKOUTS</span><span>${workoutPct}%</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+        <div style="height:100%;width:${workoutPct}%;background:var(--success);border-radius:2px;transition:width 0.5s;"></div>
+      </div>
+    </div>
+  `;
+}
 
 // ══ WEEKLY INCOME LOGGER ══
 function getWeekStart(){
@@ -1615,6 +1666,7 @@ function buildFitnessContext(){
   lines.push(`This week: ${f.weeklyCount} workouts | Water: ${f.waterToday}/${f.waterGoal} glasses`);
   if(f.streak>0) lines.push(`Streak: ${f.streak} days this week`);
   liveFitnessContext=lines.join('\n');
+  renderNexaFitCard();
 }
 
 async function syncFamilyData(){
@@ -2086,7 +2138,7 @@ function switchPanel(n,b){
   if(b)b.classList.add('active');
   if(n==='goals') renderArena();
   if(n==='schedule') setTimeout(buildTimeBlocks, 100);
-  if(n==='finance') loadIncomeData();
+  if(n==='finance') renderNexaFitCard();
 }
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
 function quickPrompt(t){document.getElementById('chatInput').value=t;sendMessage();}
@@ -3143,7 +3195,7 @@ window.addEventListener('load',()=>{
   syncTradingData();
   syncNexaTradeSession();
   setTimeout(buildTimeBlocks, 800);
-  setTimeout(loadIncomeData, 1000);
+  // income logger removed
   loadCampaignCloud();
 });
 </script>
