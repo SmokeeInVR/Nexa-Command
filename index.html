@@ -727,6 +727,9 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
       <button class="nav-btn" onclick="switchPanel('finance',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Status
       </button>
+      <button class="nav-btn" onclick="switchPanel('alerts',this)" id="nav-alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="18" cy="5" r="3" fill="#e05555" stroke="none" id="alertDot" style="display:none;"/></svg>Alerts
+      </button>
       <button class="nav-btn" onclick="switchPanel('explore',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Explore
       </button>
@@ -1006,6 +1009,36 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
     </div>
   </div>
 
+  <!-- ALERTS PANEL -->
+  <div class="panel" id="panel-alerts">
+    <div class="status-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="section-label" style="margin:0;">⚡ NEXA Alerts</div>
+        <button onclick="refreshAlerts()" style="font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--gold);background:none;border:1px solid rgba(212,165,62,0.25);border-radius:4px;padding:4px 10px;cursor:pointer;">↻ REFRESH</button>
+      </div>
+      <div id="alertsLastChecked" style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text-dim);letter-spacing:1px;margin-bottom:14px;"></div>
+      <div class="section-label">🏠 Inspection Updates</div>
+      <div id="alertsInspections">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:14px 0;border:1px dashed var(--border);border-radius:8px;">No changes detected — all clear</div>
+      </div>
+      <div style="height:14px;"></div>
+      <div class="section-label">📧 Emails Needing Action</div>
+      <div id="alertsEmails">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:14px 0;border:1px dashed var(--border);border-radius:8px;">No action needed</div>
+      </div>
+      <div style="height:14px;"></div>
+      <div class="section-label">💰 Finance Flags</div>
+      <div id="alertsFinance">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:14px 0;border:1px dashed var(--border);border-radius:8px;">Loading financial data...</div>
+      </div>
+      <div style="height:14px;"></div>
+      <div class="section-label">⚙️ NEXA Action Log</div>
+      <div id="alertsLog">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:14px 0;border:1px dashed var(--border);border-radius:8px;">No actions logged yet today</div>
+      </div>
+      <div style="height:24px;"></div>
+    </div>
+  </div>
   <!-- EXPLORE PANEL -->
   <div class="panel" id="panel-explore">
     <div class="explore-panel">
@@ -2139,6 +2172,7 @@ function switchPanel(n,b){
   if(n==='goals') renderArena();
   if(n==='schedule') setTimeout(buildTimeBlocks, 100);
   if(n==='finance') renderNexaFitCard();
+  if(n==='alerts'){ loadAlerts(); refreshAlerts(); }
 }
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
 function quickPrompt(t){document.getElementById('chatInput').value=t;sendMessage();}
@@ -3183,6 +3217,86 @@ function getArenaContext(){
   return `\n\nARENE BOSS THIS WEEK: "${b.name}" (${b.stat}, rage level ${b.rageLevel}/4). HP: ${b.hpRemaining}/${b.hpMax} remaining. ${b.defeated?'ALREADY DEFEATED this week.':'Not yet defeated.'}${b.rageLevel>=2?' This boss has survived before and came back stronger.':''}`;
 }
 
+// ══ NEXA ALERTS SYSTEM ══
+let nexaAlerts = {
+  inspections: [],
+  emails: [],
+  finance: [],
+  log: [],
+  lastChecked: null
+};
+function loadAlerts(){
+  const stored = localStorage.getItem('nexa_alerts');
+  if(stored){ try{ nexaAlerts = JSON.parse(stored); }catch(e){} }
+}
+function saveAlerts(){
+  localStorage.setItem('nexa_alerts', JSON.stringify(nexaAlerts));
+}
+async function refreshAlerts(){
+  try{
+    const res = await fetch(FINANCE_URL+'/api/sync/load?id=nexa_alerts');
+    if(res.ok){
+      const d = await res.json();
+      if(d&&d.data) nexaAlerts = d.data;
+    }
+  }catch(e){ console.warn('Could not fetch alerts from cloud'); }
+  if(financeData) buildFinanceAlerts();
+  renderAlerts();
+  saveAlerts();
+  const now = new Date();
+  const el = document.getElementById('alertsLastChecked');
+  if(el) el.textContent = 'Last checked: ' + now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) + ' · ' + now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  const totalAlerts = (nexaAlerts.inspections||[]).length + (nexaAlerts.emails||[]).length + (nexaAlerts.finance||[]).length;
+  const dot = document.getElementById('alertDot');
+  if(dot) dot.style.display = totalAlerts > 0 ? 'block' : 'none';
+}
+function buildFinanceAlerts(){
+  if(!financeData) return;
+  const alerts = [];
+  const d = financeData;
+  const cash = d.cash&&d.cash.total!=null ? d.cash.total : 0;
+  const wi = d.income&&d.income.totalWeekly!=null ? d.income.totalWeekly : 0;
+  const fb = d.budget&&d.budget.monthlyFixedBills!=null ? d.budget.monthlyFixedBills : 0;
+  const weeklyBills = fb / 4.33;
+  if(wi === 0) alerts.push({ type:'warn', text:'Income not logged this week — log it to see your margin', icon:'💰' });
+  if(cash < 500 && cash > 0) alerts.push({ type:'warn', text:'Cash is low — $'+cash.toFixed(0)+' liquid', icon:'⚠️' });
+  if(cash < 200) alerts.push({ type:'critical', text:'CRITICAL — Cash at $'+cash.toFixed(0)+'. Protect the buffer.', icon:'🚨' });
+  if(wi > 0 && (wi - weeklyBills) < 0) alerts.push({ type:'warn', text:'Weekly margin is negative — income $'+wi.toFixed(0)+' vs bills $'+weeklyBills.toFixed(0), icon:'📉' });
+  const debts = d.debts&&d.debts.items ? d.debts.items : [];
+  debts.filter(x => parseFloat(x.apr) > 25).forEach(debt => {
+    const daily = (parseFloat(debt.remainingBalance) * (parseFloat(debt.apr)/100)) / 365;
+    alerts.push({ type:'info', text:debt.name+' at '+debt.apr+'% APR — costing $'+daily.toFixed(2)+'/day in interest', icon:'📈' });
+  });
+  nexaAlerts.finance = alerts;
+}
+function renderAlerts(){
+  const empty = type => '<div style="font-family:\'Share Tech Mono\',monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:14px 0;border:1px dashed var(--border);border-radius:8px;">'+type+'</div>';
+  const inspEl = document.getElementById('alertsInspections');
+  if(inspEl) inspEl.innerHTML = nexaAlerts.inspections&&nexaAlerts.inspections.length ? nexaAlerts.inspections.map(renderAlertItem).join('') : empty('No changes detected — all clear');
+  const emailEl = document.getElementById('alertsEmails');
+  if(emailEl) emailEl.innerHTML = nexaAlerts.emails&&nexaAlerts.emails.length ? nexaAlerts.emails.map(renderAlertItem).join('') : empty('No action needed');
+  const finEl = document.getElementById('alertsFinance');
+  if(finEl) finEl.innerHTML = nexaAlerts.finance&&nexaAlerts.finance.length ? nexaAlerts.finance.map(renderAlertItem).join('') : empty('No flags — finances look clean');
+  const logEl = document.getElementById('alertsLog');
+  if(logEl) logEl.innerHTML = nexaAlerts.log&&nexaAlerts.log.length ? nexaAlerts.log.slice(0,10).map(renderAlertItem).join('') : empty('No actions logged yet today');
+}
+function renderAlertItem(a){
+  const colors = {
+    critical: { bg:'rgba(224,85,85,0.1)', border:'rgba(224,85,85,0.3)', text:'var(--warn)' },
+    warn:     { bg:'rgba(212,165,62,0.08)', border:'rgba(212,165,62,0.25)', text:'var(--gold)' },
+    info:     { bg:'rgba(0,0,0,0.2)', border:'var(--border)', text:'var(--text)' },
+    success:  { bg:'rgba(92,184,92,0.08)', border:'rgba(92,184,92,0.25)', text:'var(--success)' },
+  };
+  const c = colors[a.type]||colors.info;
+  const time = a.time ? '<span style="color:var(--text-dim);margin-left:8px;">'+a.time+'</span>' : '';
+  return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:'+c.bg+';border:1px solid '+c.border+';border-radius:8px;margin-bottom:6px;">'
+    +'<span style="font-size:14px;flex-shrink:0;">'+(a.icon||'•')+'</span>'
+    +'<div style="flex:1;">'
+      +'<div style="font-family:\'Share Tech Mono\',monospace;font-size:10px;color:'+c.text+';line-height:1.5;">'+escH(a.text)+time+'</div>'
+      +(a.sub ? '<div style="font-family:\'Share Tech Mono\',monospace;font-size:9px;color:var(--text-dim);margin-top:3px;">'+escH(a.sub)+'</div>' : '')
+    +'</div>'
+  +'</div>';
+}
 window.addEventListener('load',()=>{
   updateVoiceUI();
   checkQuestRefresh();
@@ -3197,6 +3311,8 @@ window.addEventListener('load',()=>{
   setTimeout(buildTimeBlocks, 800);
   // income logger removed
   loadCampaignCloud();
+  loadAlerts();
+  if(financeData) buildFinanceAlerts();
 });
 </script>
 </body>
