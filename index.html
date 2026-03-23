@@ -3464,15 +3464,14 @@ class NEXAAvatar {
     this.renderer.setSize(w,h,false);
   }
 }
-let nexaAvatar=null;
 function initNEXAAvatar(){
-  if(nexaAvatar||typeof THREE==='undefined') return;
+  if(window.nexaAvatar||typeof THREE==='undefined') return;
   const c=document.getElementById('nexaAvatarCanvas');
   if(!c) return;
-  nexaAvatar=new NEXAAvatar(c);
-  window.nexaAvatar=nexaAvatar;
-  window.addEventListener('resize',()=>nexaAvatar&&nexaAvatar.resize());
+  window.nexaAvatar=new NEXAAvatar(c);
+  window.addEventListener('resize',()=>window.nexaAvatar&&window.nexaAvatar.resize());
 }
+
 w.addEventListener('load',()=>{
   updateVoiceUI();
   checkQuestRefresh();
