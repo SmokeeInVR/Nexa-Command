@@ -705,7 +705,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
         </button>
         <button class="hdr-btn" id="briefBtn" onclick="runMorningBriefing()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-          BRIEF
+          MORNING BRIEF
         </button>
         <button class="hdr-btn" id="syncBtn" onclick="syncFinanceData()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -889,8 +889,9 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 
       <!-- ADD CUSTOM BLOCK -->
       <div class="section-label">+ Add Block</div>
-      <div style="display:grid;grid-template-columns:80px 1fr;gap:8px;margin-bottom:8px;">
-        <input id="tbTime" placeholder="9:00" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;"/>
+      <div style="display:grid;grid-template-columns:72px 72px 1fr;gap:8px;margin-bottom:8px;">
+        <input id="tbTime" placeholder="9:00" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;" oninput="autoFillEndTime()"/>
+        <input id="tbEndTime" placeholder="10:00" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;"/>
         <input id="tbLabel" placeholder="Inspection — Pine Canyon" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;"/>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
@@ -1635,41 +1636,56 @@ async function askNexaForAction(){
 async function runMorningBriefing(){
   if(!NEXAKEY){showKeyModal();return;}
   switchPanel('command',document.querySelector('.nav-btn'));
-  const gc=northStar.goal?`North Star: "${northStar.goal}" (target: ${northStar.date||'none'})`:'No North Star set.';
-  const mc=milestones.length?milestones.map((m,i)=>`Milestone ${i+1}: ${m.name} — ${(m.tiers||[]).reduce((a,t)=>a+t.quests.filter(q=>!q.done).length,0)} open quests`).join(', '):'No milestones.';
-  const codexCtx=codex.length?'\n\nCodex (recent knowledge):\n'+codex.slice(0,5).map(e=>`[${e.cat}] ${e.note}`).join('\n'):'';
+  addMessage('user','🌅 NEXA Morning Brief');
+  // Sync live data first if stale
+  if(!financeData){
+    const syncMsg = showTyping();
+    await syncFinanceData().catch(()=>{});
+    syncMsg.remove();
+  }
+  const gc=northStar.goal?`North Star: "${northStar.goal}" (target: ${northStar.date||'none'}).`:'No North Star set.';
+  const mc=milestones.length?milestones.map((m,i)=>{
+    const openTier=(m.tiers||[]).find(t=>t.quests&&t.quests.some(q=>!q.done));
+    const openQ=openTier?openTier.quests.filter(q=>!q.done).map(q=>q.text).join(', '):'none';
+    return `${i+1}. ${m.name}: open quests — ${openQ}`;
+  }).join('; '):'No milestones.';
+  const codexCtx=codex.length?'\n\nCodex highlights:\n'+codex.slice(0,3).map(e=>`[${e.cat}] ${e.note}`).join('\n'):'';
   const arenaCtx=getArenaContext();
-  const prompt=`Good morning. Give me my daily briefing. Be sharp, direct, personal. No generic motivational fluff.
+  const finCtx = financeData
+    ? liveFinanceContext
+    : '\n\n⚠ Nexa Finance offline — no live data available. Pull up manually if needed.';
+  const prompt=`Good morning. Run my NEXA morning brief. Be sharp, direct, no fluff.
 
-Include:
-1. One sentence on where I stand financially (use my real data)
-2. My North Star and whether I'm moving toward it
-3. My streak — ${streak.count} days. Call it out.
-4. The single most important thing to do today based on my milestones and money situation
-5. One line to send me into the day
-
+1. Finance snapshot — cash on hand, weekly margin, any urgent debt flags (use live data if available, flag if offline)
+2. North Star check — one sentence on progress momentum
+3. Streak — ${streak.count} days. Call it out directly.
+4. Today's single most important action based on my milestones and money situation
+5. One strong closing line
 ${gc}
 ${mc}${codexCtx}${arenaCtx}
-
-If today is Monday, announce the Arena boss dramatically in one sentence — include its name, stat, HP, and rage level. If rage > 1, call out that it survived before and is stronger now.`;
-  addMessage('user','🌅 Morning Briefing');
+If today is Monday, announce the Arena boss dramatically — name, stat, HP, rage level.`;
   messages.push({role:'user',content:prompt});
   const t=showTyping();
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:500,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages})});
-    const d=await r.json();if(!r.ok){t.remove();
-    if(r.status===401||r.status===403||(d.error?.type==='authentication_error')){
-      addMessage('nexa','⚠ API key needed. Tap the key icon to enter your key.');
-      showKeyModal();
-    } else {
-      addMessage('nexa','⚠ Error: '+(d.error?.message||r.status));
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:600,system:NEXA_PERSONA+finCtx+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext,messages})
+    });
+    const d=await r.json();
+    if(!r.ok){
+      t.remove();
+      if(r.status===401||r.status===403){addMessage('nexa','⚠ API key needed. Tap the key icon.');showKeyModal();}
+      else{addMessage('nexa','⚠ API error: '+(d.error?.message||r.status));}
+      return;
     }
-    return;}
-    const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});
+    const reply=d.content?.[0]?.text||'Error.';
+    t.remove();
+    addMessage('nexa',reply);
+    messages.push({role:'assistant',content:reply});
     speak(reply,'voiceOrb');
-  }catch(e){t.remove();addMessage('nexa','⚠ '+e.message);}
+  }catch(e){t.remove();addMessage('nexa','⚠ '+(e.message||'Connection error — check your network and try again.'));}
 }
-
 // ══ MODALS ══
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
@@ -1856,26 +1872,41 @@ function renderNexaTradeCard(){
 // ══ TIME BLOCKS ══
 let timeBlocksVisible = true;
 let customBlocks = JSON.parse(localStorage.getItem('nexa_custom_blocks')||'[]');
+function autoFillEndTime(){
+  const t = document.getElementById('tbTime')?.value?.trim();
+  const et = document.getElementById('tbEndTime');
+  if(!t || !et || et.value) return;
+  const h = parseInt(t.split(':')[0])||0;
+  const m = parseInt(t.split(':')[1]||'0')||0;
+  const endH = h + 1;
+  const endM = m;
+  et.value = endH + ':' + String(endM).padStart(2,'0');
+}
 function addCustomBlock(){
   const time = document.getElementById('tbTime')?.value?.trim();
+  const endTime = document.getElementById('tbEndTime')?.value?.trim();
   const label = document.getElementById('tbLabel')?.value?.trim();
   const type = document.getElementById('tbType')?.value || 'routine';
-  if(!time||!label) return;
+  if(!time||!label){ alert('Enter a start time and label'); return; }
   const h = parseInt(time.split(':')[0])||0;
   const m = parseInt(time.split(':')[1]||'0')||0;
+  const h2 = endTime ? parseInt(endTime.split(':')[0])||h+1 : h+1;
+  const m2 = endTime ? parseInt(endTime.split(':')[1]||'0')||0 : 0;
   const typeIcons = { inspection:'🏠', build:'⚙️', family:'👶', trading:'📈', routine:'📋' };
   const newBlock = {
     id: 'custom_'+Date.now(),
-    time, label, type,
+    time, endTime: endTime||(h+1)+':'+String(m).padStart(2,'0'),
+    label, type,
     icon: typeIcons[type] || '📌',
     startMins: h*60+m,
-    endMins: h*60+m+60,
+    endMins: h2*60+m2,
     custom:true
   };
   const blocks = getStoredBlocks();
   blocks.push(newBlock);
   saveStoredBlocks(blocks);
   document.getElementById('tbTime').value='';
+  document.getElementById('tbEndTime').value='';
   document.getElementById('tbLabel').value='';
   buildTimeBlocks();
 }
@@ -1995,7 +2026,7 @@ function buildTimeBlocks(){
         <button onclick="deleteTimeBlock('${b.id}')" style="background:none;border:1px solid rgba(224,85,85,0.2);border-radius:3px;padding:1px 5px;color:var(--warn);font-family:'Share Tech Mono',monospace;font-size:8px;cursor:pointer;opacity:0.6;" title="Delete">✕</button>
       </div>` : '';
     return `<div style="display:flex;gap:10px;padding:8px 10px;border-radius:6px;background:${c.bg};border:1px solid ${c.border};${leftBorder}margin-bottom:6px;opacity:${opacity};align-items:center;">
-      <div style="width:36px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0;padding-top:2px;">${b.time}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0;padding-top:2px;min-width:70px;">${b.time}${b.endTime?'–'+b.endTime:''}</div>
       <div style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;margin-top:2px;"></div>
       <div style="flex:1;">
         <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:${isCurrent?'#fff':'var(--text)'};font-weight:${isCurrent?'700':'400'};">
