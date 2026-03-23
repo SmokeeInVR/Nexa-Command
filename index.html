@@ -3364,7 +3364,7 @@ function renderAlertItem(a){
 }
 windo
 // ══ NEXA AVATAR ══
-class NEXAAvatar {
+var NEXAAvatar = class {
   constructor(canvasEl) {
     this.canvas=canvasEl;
     this.scene=new THREE.Scene();
@@ -3463,7 +3463,7 @@ class NEXAAvatar {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w,h,false);
   }
-}
+};
 function initNEXAAvatar(){
   if(window.nexaAvatar||typeof THREE==='undefined') return;
   const c=document.getElementById('nexaAvatarCanvas');
