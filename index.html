@@ -1922,8 +1922,7 @@ function buildTimeBlocks(){
   if(refreshBtn) refreshBtn.textContent = '↻ ' + refreshed;
 
   // Get all blocks (stored defaults + any live trading session)
-  const allBlocks = [...getStoredBlocks(), ...(window._remoteBlocks||[])];
-  if(!window._remoteBlocksLoaded){window._remoteBlocksLoaded=true;fetch('https://nexa-command.vercel.app/api/proxy/api/os/blocks').then(r=>r.json()).then(b=>{window._remoteBlocks=b;buildTimeBlocks();}).catch(()=>{});}
+  const allBlocks = getStoredBlocks();
 
   // Add live trading session block if active
   const sessionActive = nexaTradeSession?.status?.sessionActive;
