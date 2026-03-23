@@ -1090,114 +1090,257 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-// ══ NEXA AVATAR ══
 var NEXAAvatar = class {
+
   constructor(canvasEl) {
-    this.canvas=canvasEl;
-    this.scene=new THREE.Scene();
-    const w=canvasEl.clientWidth||420, h=canvasEl.clientHeight||520;
-    this.camera=new THREE.PerspectiveCamera(50,w/h,0.1,100);
-    this.camera.position.set(0,1.05,2.9);
-    this.camera.lookAt(0,1.05,0);
-    this.renderer=new THREE.WebGLRenderer({canvas:canvasEl,alpha:true,antialias:true});
-    this.renderer.setSize(w,h,false);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-    this.renderer.setClearColor(0x000000,0);
-    this.clock=new THREE.Clock();
-    this.talking=false;
-    this.talkEnd=0;
-    this._buildScene();
+    this.canvas   = canvasEl;
+    this.talking  = false;
+    this.talkEnd  = 0;
+    this.model    = null;
+    this.mixer    = null;
+    this.clock    = new THREE.Clock();
+    this._loaded  = false;
+    this._initScene();
+    this._addBaseEffects();
+    this._showLoadingRing();
+    this._loadGLTF();
     this._animate();
   }
-  _pts(){
-    const p=[],r=Math.random.bind(Math);
-    function sph(cx,cy,cz,rx,ry,rz,n){for(let i=0;i<n;i++){const th=r()*Math.PI*2,ph=Math.acos(2*r()-1),rd=0.9+r()*0.1;p.push(cx+rx*rd*Math.sin(ph)*Math.cos(th),cy+ry*rd*Math.cos(ph),cz+rz*rd*Math.sin(ph)*Math.sin(th));}}
-    function cyl(cx,cy,cz,rt,rb,h,n){for(let i=0;i<n;i++){const t=r(),a=r()*Math.PI*2,rd=rt+(rb-rt)*t;p.push(cx+rd*Math.cos(a),cy+h*t,cz+rd*Math.sin(a)*0.6);}}
-    sph(0,1.55,0,0.18,0.21,0.15,340);
-    cyl(0,1.28,0,0.065,0.076,0.19,78);
-    for(let i=0;i<130;i++)p.push((r()*2-1)*0.54,1.17+r()*0.07,(r()-0.5)*0.22);
-    for(let i=0;i<480;i++){const t=r(),a=r()*Math.PI*2,b=t<0.38?Math.sin(t*Math.PI/0.38)*0.038:0,rd=(0.27-t*0.11+b)*(0.82+r()*0.18);p.push(rd*Math.cos(a)*1.18,0.34+(1-t)*0.84,rd*Math.sin(a)*0.62);}
-    for(const s of[-1,1]){for(let i=0;i<185;i++){const t=r(),a=r()*Math.PI*2,rd=(0.054-t*0.013)*(0.8+r()*0.4);p.push(s*(0.34+t*0.19)+rd*Math.cos(a)*0.5,1.14-t*0.62,rd*Math.sin(a));}}
-    return p;
+
+  _initScene() {
+    const w = this.canvas.clientWidth  || 480;
+    const h = this.canvas.clientHeight || 400;
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x000000);
+    this.scene.fog = new THREE.FogExp2(0x000000, 0.0008);
+    this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 10000);
+    this.camera.position.set(0, 120, 280);
+    this.camera.lookAt(0, 100, 0);
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setSize(w, h, false);
+    this.renderer.shadowMap.enabled = false;
+    this.scene.add(new THREE.AmbientLight(0xffd700, 0.3));
+    const front = new THREE.PointLight(0x88ddff, 0.6, 2000);
+    front.position.set(0, 160, 200);
+    this.scene.add(front);
   }
-  _buildScene(){
-    const pts=this._pts();
-    const geo=new THREE.BufferGeometry();
-    const arr=new Float32Array(pts);
-    geo.setAttribute('position',new THREE.BufferAttribute(arr,3));
-    this._base=arr.slice();
-    this._pa=geo.attributes.position;
-    const mat=new THREE.PointsMaterial({color:0xffd700,size:0.016,transparent:true,opacity:0.9,blending:THREE.AdditiveBlending,depthWrite:false});
-    this.mesh=new THREE.Points(geo,mat);
-    this.scene.add(this.mesh);
-    const geo2=geo.clone();
-    const mat2=new THREE.PointsMaterial({color:0x88ddff,size:0.008,transparent:true,opacity:0.3,blending:THREE.AdditiveBlending,depthWrite:false});
-    this.mesh2=new THREE.Points(geo2,mat2);
-    this.mesh2.rotation.y=0.15;
-    this.scene.add(this.mesh2);
-    const rg=new THREE.RingGeometry(0.22,0.28,64);
-    const rm=new THREE.MeshBasicMaterial({color:0xffd700,transparent:true,opacity:0.2,side:THREE.DoubleSide});
-    this.ring=new THREE.Mesh(rg,rm);
-    this.ring.rotation.x=-Math.PI/2;
-    this.ring.position.y=0.28;
+
+  _addBaseEffects() {
+    const rg = new THREE.RingGeometry(30, 38, 48);
+    const rm = new THREE.MeshBasicMaterial({
+      color: 0xffd700, transparent: true, opacity: 0.35,
+      side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    this.ring = new THREE.Mesh(rg, rm);
+    this.ring.rotation.x = -Math.PI / 2;
+    this.ring.position.y = 1;
     this.scene.add(this.ring);
-    const sg=new THREE.PlaneGeometry(1.1,0.01);
-    const sm=new THREE.MeshBasicMaterial({color:0xffd700,transparent:true,opacity:0.12,side:THREE.DoubleSide});
-    this.scan=new THREE.Mesh(sg,sm);
-    this.scan.position.z=0.18;
+    const sg = new THREE.PlaneGeometry(160, 4);
+    const sm = new THREE.MeshBasicMaterial({
+      color: 0x88ddff, transparent: true, opacity: 0.07,
+      depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    this.scan = new THREE.Mesh(sg, sm);
     this.scene.add(this.scan);
+    const og = new THREE.RingGeometry(50, 55, 48);
+    const om = new THREE.MeshBasicMaterial({
+      color: 0x88ddff, transparent: true, opacity: 0.12,
+      side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    this.outerRing = new THREE.Mesh(og, om);
+    this.outerRing.rotation.x = -Math.PI / 2;
+    this.outerRing.position.y = 1;
+    this.scene.add(this.outerRing);
   }
-  talk(ms=15000){
-    this.talking=true;
-    this.talkEnd=performance.now()+ms;
-    const s=document.getElementById('nexaAvatarStatus');
-    if(s) s.textContent='BRIEFING';
+
+  _showLoadingRing() {
+    const g = new THREE.TorusGeometry(22, 1.5, 8, 48);
+    const m = new THREE.MeshBasicMaterial({
+      color: 0xffd700, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending
+    });
+    this.loadRing = new THREE.Mesh(g, m);
+    this.loadRing.position.set(0, 100, 0);
+    this.scene.add(this.loadRing);
+    const st = document.getElementById('nexaAvatarStatus');
+    if (st) st.textContent = 'LOADING...';
   }
-  _animate(){
-    requestAnimationFrame(()=>this._animate());
-    const t=this.clock.getElapsedTime();
-    if(this.talking&&performance.now()>this.talkEnd){
-      this.talking=false;
-      const s=document.getElementById('nexaAvatarStatus');
-      if(s) s.textContent='STANDBY';
+
+  _loadGLTF() {
+    const MODEL_URL = 'https://raw.githubusercontent.com/SmokeeInVR/Nexa-Command/main/nexa_avatar.glb.glb';
+    if (typeof THREE.GLTFLoader === 'undefined') {
+      console.warn('GLTFLoader not available, falling back to particles');
+      this._fallbackParticles();
+      return;
     }
-    this.mesh.position.y=Math.sin(t*0.7)*0.035;
-    this.mesh2.position.y=Math.sin(t*0.7+0.3)*0.035;
-    this.mesh.rotation.y=Math.sin(t*0.25)*0.06;
-    this.ring.material.opacity=0.15+Math.sin(t*1.5)*0.07;
-    this.ring.scale.setScalar(1+Math.sin(t*1.5)*0.04);
-    this.scan.position.y=0.3+(((t*0.45)%1.5)-0.1)*1.4;
-    this.scan.material.opacity=0.06+Math.sin(t*3)*0.04;
-    const pa=this._pa,base=this._base;
-    if(this.talking){
-      const jt=t*22;
-      for(let i=0;i<pa.count;i++){
-        const by=base[i*3+1];
-        if(by>1.35){pa.setX(i,base[i*3]+Math.sin(jt+i*1.7)*0.013);pa.setY(i,by+Math.sin(jt*1.3+i)*0.019);}
-        else{const pl=1+Math.sin(t*8)*0.022;pa.setX(i,base[i*3]*pl);pa.setY(i,by+Math.sin(t*2+i*0.3)*0.003);}
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+      MODEL_URL,
+      (gltf) => this._onLoaded(gltf),
+      (xhr) => {
+        const pct = xhr.total ? Math.round(xhr.loaded / xhr.total * 100) : '?';
+        const st = document.getElementById('nexaAvatarStatus');
+        if (st) st.textContent = 'LOADING ' + pct + '%';
+      },
+      (err) => {
+        console.warn('GLB load error, using particle fallback:', err);
+        this._fallbackParticles();
       }
-      this.mesh.material.opacity=0.85+Math.sin(t*12)*0.12;
-    } else {
-      for(let i=0;i<pa.count;i++) pa.setY(i,base[i*3+1]+Math.sin(t*1.8+i*0.4)*0.003);
-      this.mesh.material.opacity=0.82+Math.sin(t*1.5)*0.07;
+    );
+  }
+
+  _onLoaded(gltf) {
+    if (this.loadRing) { this.scene.remove(this.loadRing); this.loadRing = null; }
+    const root = gltf.scene;
+    this.model = root;
+    const box0 = new THREE.Box3().setFromObject(root);
+    const size0 = new THREE.Vector3();
+    box0.getSize(size0);
+    if (size0.y < 10) root.scale.setScalar(100);
+    const box = new THREE.Box3().setFromObject(root);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    root.position.x -= center.x;
+    root.position.z -= center.z;
+    root.position.y -= box.min.y;
+    const h = size.y;
+    this.camera.position.set(0, h * 0.65, h * 1.55);
+    this.camera.lookAt(0, h * 0.55, 0);
+    root.traverse(child => {
+      if (!child.isMesh) return;
+      child.material = new THREE.MeshBasicMaterial({
+        color: 0xffd700, transparent: true, opacity: 0.72,
+        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide
+      });
+      const wf = child.clone();
+      wf.material = new THREE.MeshBasicMaterial({
+        color: 0x88ddff, wireframe: true, transparent: true,
+        opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false
+      });
+      child.parent.add(wf);
+      child.castShadow = child.receiveShadow = false;
+    });
+    this.scene.add(root);
+    const scl = size.x * 0.6;
+    if (this.ring) this.ring.scale.setScalar(scl / 30);
+    if (this.outerRing) this.outerRing.scale.setScalar(scl / 30);
+    if (this.scan) this.scan.scale.x = size.x * 1.2;
+    if (gltf.animations && gltf.animations.length) {
+      this.mixer = new THREE.AnimationMixer(root);
+      const idleClip = gltf.animations.find(a => /idle|breath/i.test(a.name)) || gltf.animations[0];
+      this.idleAction = this.mixer.clipAction(idleClip);
+      this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
+      this.idleAction.play();
+      const talkClip = gltf.animations.find(a => /talk|speak|gesture/i.test(a.name));
+      if (talkClip) {
+        this.talkAction = this.mixer.clipAction(talkClip);
+        this.talkAction.setLoop(THREE.LoopRepeat, Infinity);
+      }
     }
-    pa.needsUpdate=true;
-    this.renderer.render(this.scene,this.camera);
+    this._loaded = true;
+    const st = document.getElementById('nexaAvatarStatus');
+    if (st) st.textContent = 'STANDBY';
   }
-  resize(){
-    const w=this.canvas.clientWidth,h=this.canvas.clientHeight;
-    this.camera.aspect=w/h;
+
+  talk(ms = 15000) {
+    this.talking = true;
+    this.talkEnd = performance.now() + ms;
+    const st = document.getElementById('nexaAvatarStatus');
+    if (st) st.textContent = 'SPEAKING';
+    if (this.talkAction && this.idleAction) {
+      this.talkAction.reset().play();
+      this.idleAction.crossFadeTo(this.talkAction, 0.4, false);
+    }
+  }
+
+  _animate() {
+    requestAnimationFrame(() => this._animate());
+    const delta = this.clock.getDelta();
+    const t     = this.clock.elapsedTime;
+    const now   = performance.now();
+    if (this.mixer) this.mixer.update(delta);
+    if (this.talking && now > this.talkEnd) {
+      this.talking = false;
+      const st = document.getElementById('nexaAvatarStatus');
+      if (st) st.textContent = 'STANDBY';
+      if (this.talkAction && this.idleAction) {
+        this.idleAction.reset().play();
+        this.talkAction.crossFadeTo(this.idleAction, 0.4, false);
+      }
+    }
+    if (this.ring)      this.ring.rotation.z     = t * 0.4;
+    if (this.outerRing) this.outerRing.rotation.z = -t * 0.2;
+    if (this.scan) {
+      this.scan.position.y = ((t * 40) % 180) + 5;
+      this.scan.material.opacity = 0.04 + 0.04 * Math.sin(t * 3);
+    }
+    if (this.loadRing) {
+      this.loadRing.rotation.y = t * 2.5;
+      this.loadRing.rotation.x = t * 1.2;
+    }
+    if (this.model) {
+      const talkBoost = this.talking ? 0.15 * Math.abs(Math.sin(t * 18)) : 0;
+      const flicker = 0.65 + 0.08 * Math.sin(t * 11.7) + 0.04 * Math.random() + talkBoost;
+      this.model.traverse(child => {
+        if (child.isMesh && child.material && child.material.transparent && !child.material.wireframe) {
+          child.material.opacity = Math.min(0.95, flicker);
+        }
+      });
+    }
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  resize() {
+    const w = this.canvas.clientWidth;
+    const h = this.canvas.clientHeight;
+    if (!w || !h) return;
+    this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(w,h,false);
+    this.renderer.setSize(w, h, false);
   }
+
+  _fallbackParticles() {
+    if (this.loadRing) { this.scene.remove(this.loadRing); this.loadRing = null; }
+    this.camera.position.set(0, 1.05, 2.9);
+    this.camera.lookAt(0, 1.05, 0);
+    const count = 1400;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const u = Math.random(), v = Math.random();
+      const theta = 2 * Math.PI * u;
+      const phi   = Math.acos(2 * v - 1);
+      const r     = 0.45 + Math.random() * 0.1;
+      const yOff  = i < count * 0.3 ? 1.55 : (i < count * 0.6 ? 1.1 : 0.6);
+      positions[i*3]     = r * Math.sin(phi) * Math.cos(theta) * (i < count*0.3 ? 0.22 : 0.45);
+      positions[i*3 + 1] = r * Math.cos(phi) * 0.5 + yOff;
+      positions[i*3 + 2] = r * Math.sin(phi) * Math.sin(theta) * 0.2;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: 0xffd700, size: 0.016, transparent: true, opacity: 0.85,
+      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+    });
+    this._pts = new THREE.Points(geo, mat);
+    this.scene.add(this._pts);
+    this._loaded = true;
+    const st = document.getElementById('nexaAvatarStatus');
+    if (st) st.textContent = 'STANDBY';
+  }
+
 };
-function initNEXAAvatar(){
-  if(window.nexaAvatar||typeof THREE==='undefined') return;
-  const c=document.getElementById('nexaAvatarCanvas');
-  if(!c) return;
-  window.nexaAvatar=new NEXAAvatar(c);
-  window.addEventListener('resize',()=>window.nexaAvatar&&window.nexaAvatar.resize());
+
+function initNEXAAvatar() {
+  if (window.nexaAvatar || typeof THREE === 'undefined') return;
+  const c = document.getElementById('nexaAvatarCanvas');
+  if (!c) return;
+  window.nexaAvatar = new NEXAAvatar(c);
+  window.addEventListener('resize', () => window.nexaAvatar && window.nexaAvatar.resize());
 }
 </script>
 <style>
