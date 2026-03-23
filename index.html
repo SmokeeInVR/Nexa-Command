@@ -1071,21 +1071,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
       </div>
     </div>
   </div>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<style>
-#panel-nexa{background:#000;padding:0;overflow:hidden;}
-.nxa-wrap{display:flex;flex-direction:column;height:100%;}
-.nxa-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid #ffd70033;flex-shrink:0;}
-.nxa-title{font-size:12px;font-weight:700;letter-spacing:4px;color:#ffd700;}
-.nxa-status{font-size:10px;letter-spacing:2px;color:#ffd70077;}
-#nexaAvatarCanvas{flex:1;width:100%;display:block;min-height:0;}
-.nxa-out{max-height:165px;overflow-y:auto;padding:12px 16px;border-top:1px solid #ffd70022;font-size:12px;line-height:1.65;color:#ccc;background:rgba(0,0,0,0.7);flex-shrink:0;}
-.nxa-out-placeholder{color:#ffd70044;font-style:italic;text-align:center;padding:6px 0;font-size:11px;letter-spacing:1px;}
-.nxa-brief-btn{display:block;width:calc(100% - 32px);margin:10px 16px 12px;padding:8px 0;background:transparent;border:1px solid #ffd70055;color:#ffd700;font-size:11px;letter-spacing:2px;cursor:pointer;border-radius:3px;flex-shrink:0;}
-.nxa-brief-btn:hover{background:#ffd70011;}
-</style>
 <!-- NEXA AVATAR PANEL -->
 <div class="panel" id="panel-nexa">
   <div class="nxa-wrap">
@@ -1100,7 +1086,21 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
     <button class="nxa-brief-btn" onclick="runMorningBriefing()">&#9654; RUN MORNING BRIEF</button>
   </div>
 </div>
-<script>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+#panel-nexa{background:#000;padding:0;overflow:hidden;}
+.nxa-wrap{display:flex;flex-direction:column;height:100%;}
+.nxa-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid #ffd70033;flex-shrink:0;}
+.nxa-title{font-size:12px;font-weight:700;letter-spacing:4px;color:#ffd700;}
+.nxa-status{font-size:10px;letter-spacing:2px;color:#ffd70077;}
+#nexaAvatarCanvas{flex:1;width:100%;display:block;min-height:0;}
+.nxa-out{max-height:165px;overflow-y:auto;padding:12px 16px;border-top:1px solid #ffd70022;font-size:12px;line-height:1.65;color:#ccc;background:rgba(0,0,0,0.7);flex-shrink:0;}
+.nxa-out-placeholder{color:#ffd70044;font-style:italic;text-align:center;padding:6px 0;font-size:11px;letter-spacing:1px;}
+.nxa-brief-btn{display:block;width:calc(100% - 32px);margin:10px 16px 12px;padding:8px 0;background:transparent;border:1px solid #ffd70055;color:#ffd700;font-size:11px;letter-spacing:2px;cursor:pointer;border-radius:3px;flex-shrink:0;}
+.nxa-brief-btn:hover{background:#ffd70011;}
+</style><script>
 // ══ STORAGE ══
 function save(k,v){try{localStorage.setItem("nexa_"+k,JSON.stringify(v));return;}catch(e){}try{sessionStorage.setItem("nexa_"+k,JSON.stringify(v));}catch(e){}}
 function load(k,d){try{const v=localStorage.getItem("nexa_"+k)||sessionStorage.getItem("nexa_"+k);return v?JSON.parse(v):d;}catch(e){return d;}}
