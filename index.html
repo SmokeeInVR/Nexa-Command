@@ -1217,7 +1217,7 @@ var NEXAAvatar = class {
       const isLash = /eyelash/i.test(child.name);
       child.material = new THREE.MeshBasicMaterial({
         color: 0xffd700, transparent: true,
-        opacity: isHair ? 0.07 : (isLash ? 0.0 : 0.45),
+        opacity: isHair ? 0.02 : (isLash ? 0.0 : 0.45),
         wireframe: true,
         blending: THREE.AdditiveBlending, depthWrite: false
       });
@@ -1973,29 +1973,50 @@ If today is Monday, announce the Arena boss dramatically — name, stat, HP, rag
     speak(reply,'voiceOrb');
   }catch(e){t.remove();addMessage('nexa','⚠ '+(e.message||'Connection error — check your network and try again.'));}
 }
-function nexaSpeakBrief(){
+async function nexaSpeakBrief(){
   const out=document.getElementById('nexaBriefOutput');
   const btn=document.getElementById('nexaSpeakBtn');
   if(!out||!btn) return;
-  if(window.speechSynthesis.speaking){
+  if(window._nexaSpeaking){
+    window._nexaSpeaking=false;
+    if(window._nexaAudio){window._nexaAudio.pause();window._nexaAudio=null;}
     window.speechSynthesis.cancel();
-    btn.innerHTML='&#9654; SPEAK BRIEF';btn.classList.remove('speaking');
-    const st=document.getElementById('nexaAvatarStatus');if(st)st.textContent='STANDBY';return;
+    btn.innerHTML='&#9654; SPEAK BRIEF';btn.classList.remove('active');
+    return;
   }
-  const text=out.innerText.trim();
-  if(!text||text==='\u2014 awaiting briefing \u2014') return;
+  const text=(out.innerText||out.textContent||'').trim();
+  if(text.length<10) return;
+  btn.innerHTML='&#9646;&#9646; STOP';btn.classList.add('active');
+  window._nexaSpeaking=true;
+  const key=window.NEXA_ELEVEN_KEY;
+  const voice=window.NEXA_ELEVEN_VOICE||'EXAVITQu4vr4xnSDxMaL';
+  if(key){
+    try{
+      if(window.nexaAvatar) window.nexaAvatar.talk(20000);
+      const res=await fetch('https://api.elevenlabs.io/v1/text-to-speech/'+voice+'/stream',{
+        method:'POST',headers:{'xi-api-key':key,'Content-Type':'application/json'},
+        body:JSON.stringify({text:text.slice(0,2500),model_id:'eleven_turbo_v2_5',
+          voice_settings:{stability:0.45,similarity_boost:0.8}})
+      });
+      if(res.ok){
+        const blob=await res.blob();
+        const url=URL.createObjectURL(blob);
+        const audio=new Audio(url);
+        window._nexaAudio=audio;
+        audio.onended=()=>{
+          window._nexaSpeaking=false;window._nexaAudio=null;
+          btn.innerHTML='&#9654; SPEAK BRIEF';btn.classList.remove('active');
+          URL.revokeObjectURL(url);
+        };
+        audio.play();return;
+      }
+    }catch(e){console.warn('ElevenLabs error:',e);}
+  }
   const utter=new SpeechSynthesisUtterance(text);
-  const voices=window.speechSynthesis.getVoices();
-  const f=voices.find(v=>v.name.includes('Samantha')||v.name.includes('Karen')||v.name.includes('Victoria'))||voices.find(v=>v.lang==='en-US'&&v.name.toLowerCase().includes('female'))||voices.find(v=>v.lang.startsWith('en'))||voices[0];
-  if(f) utter.voice=f; utter.rate=0.92; utter.pitch=1.08;
-  const dur=Math.max(12000,text.length*65);
-  if(window.nexaAvatar) window.nexaAvatar.talk(dur);
-  btn.innerHTML='&#9646;&#9646; STOP';btn.classList.add('speaking');
-  const st=document.getElementById('nexaAvatarStatus');if(st)st.textContent='SPEAKING';
-  utter.onend=utter.onerror=()=>{
-    btn.innerHTML='&#9654; SPEAK BRIEF';btn.classList.remove('speaking');
-    if(st)st.textContent='STANDBY';
-  };
+  utter.rate=0.9;utter.pitch=1.0;
+  const estMs=Math.min(text.length*60,30000);
+  if(window.nexaAvatar) window.nexaAvatar.talk(estMs);
+  utter.onend=()=>{window._nexaSpeaking=false;btn.innerHTML='&#9654; SPEAK BRIEF';btn.classList.remove('active');};
   window.speechSynthesis.speak(utter);
 }
 // ══ MODALS ══
