@@ -1209,14 +1209,17 @@ var NEXAAvatar = class {
     root.position.z -= center.z;
     root.position.y -= box.min.y;
     const h = size.y;
-    this.camera.position.set(0, h * 0.65, h * 1.55);
-    this.camera.lookAt(0, h * 0.55, 0);
+    this.camera.position.set(0, h * 0.55, h * 2.5);
+    this.camera.lookAt(0, h * 0.45, 0);
     root.traverse(child => {
       if (!child.isMesh) return;
       child.material = new THREE.MeshBasicMaterial({
-        color: 0xffd700, transparent: true, opacity: 0.72,
-        blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide
+        color: 0xffd700, transparent: true, opacity: 0.82,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+        side: THREE.DoubleSide
       });
+      child.castShadow = child.receiveShadow = false;
+    });
       const wf = child.clone();
       wf.material = new THREE.MeshBasicMaterial({
         color: 0x88ddff, wireframe: true, transparent: true,
