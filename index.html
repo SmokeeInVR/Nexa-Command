@@ -1094,14 +1094,13 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 <script>
 class NEXAAvatar {
   constructor(canvasEl) {
-    this.canvas   = canvasEl;
-    this.clock    = new THREE.Clock();
-    this.mixer    = null;
-    this.model    = null;
-    this.talking  = false;
-    this.talkEnd  = 0;
+    this.canvas  = canvasEl;
+    this.clock   = new THREE.Clock();
+    this.mixer   = null;
+    this.model   = null;
+    this.talking = false;
+    this.talkEnd = 0;
     this._init();
-    this._addEffects();
     this._load();
     this._animate();
   }
@@ -1111,126 +1110,169 @@ class NEXAAvatar {
     const h = this.canvas.clientHeight || 400;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x000000);
-    this.camera = new THREE.PerspectiveCamera(40, w / h, 0.001, 100000);
+    this.camera = new THREE.PerspectiveCamera(50, w / h, 0.0001, 999999);
+    this.camera.position.set(0, 10, 30);
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
     this.renderer.setSize(w, h, false);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.scene.add(new THREE.AmbientLight(0xffd700, 1.0));
-    const pt = new THREE.PointLight(0x88ddff, 0.6, 100000);
-    pt.position.set(0, 1, 1);
-    this.scene.add(pt);
+    this.scene.add(new THREE.AmbientLight(0xffffff, 1.5));
   }
 
-  _addEffects() {
-    // Ground ring — will be repositioned after model loads
-    const rg = new THREE.RingGeometry(1, 1.2, 48);
-    this.ring = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({
-      color: 0xffd700, transparent: true, opacity: 0.3,
-      side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
-    }));
-    this.ring.rotation.x = -Math.PI / 2;
-    this.scene.add(this.ring);
-    // Scan line
-    const sg = new THREE.PlaneGeometry(3, 0.08);
-    this.scan = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({
-      color: 0x88ddff, transparent: true, opacity: 0.07,
-      depthWrite: false, blending: THREE.AdditiveBlending
-    }));
-    this.scene.add(this.scan);
-  }
-
-  _load() {
-  if (typeof THREE.GLTFLoader === 'undefined') { this._fallback(); return; }
-  const loader = new THREE.GLTFLoader();
-  const url = 'https://raw.githubusercontent.com/SmokeeInVR/Nexa-Command/main/nexa_avatar.glb.glb';
-  const setStatus = s => { const el = document.getElementById('nexaAvatarStatus'); if (el) el.textContent = s; };
-  setStatus('SYNCING...');
-
-  loader.load(url, (gltf) => {
-
-    const root = gltf.scene;
-    this.scene.add(root);
-
-    // Measure raw size
-    const rawBox  = new THREE.Box3().setFromObject(root);
-    const rawSize = new THREE.Vector3();
-    rawBox.getSize(rawSize);
-
-    // Normalize height
-    const TARGET = 1.8;
-    const s = rawSize.y > 0 ? TARGET / rawSize.y : 1;
-    root.scale.setScalar(s);
-
-    // Recalculate AFTER scale
-    const box    = new THREE.Box3().setFromObject(root);
+  _fitCamera(box) {
+    // FitCamera: guaranteed to frame ANY model regardless of scale
     const size   = new THREE.Vector3();
     const center = new THREE.Vector3();
     box.getSize(size);
     box.getCenter(center);
 
-    // Center + ground
-    root.position.x -= center.x;
-    root.position.z -= center.z;
-    root.position.y -= box.min.y;
+    // Largest dimension
+    const maxDim = Math.max(size.x, size.y, size.z);
 
-    // Camera setup (IMPROVED)
-    const H    = size.y;
-    const dist = H * 1.4;
-    const eyeY = H * 0.7;
-    const atY  = H * 0.55;
+    // Distance needed to fit model in 50deg FOV
+    const fovRad  = this.camera.fov * Math.PI / 180;
+    const dist    = (maxDim / 2) / Math.tan(fovRad / 2) * 1.4;
 
-    this.camera.position.set(0, eyeY, dist);
-    this.camera.lookAt(0, atY, 0);
-    this.camera.near = H * 0.001;
-    this.camera.far  = H * 100;
-    this.camera.fov  = 42;
+    // Camera sits in front, at 60% of model height
+    const eyeY = box.min.y + size.y * 0.60;
+    this.camera.position.set(center.x, eyeY, center.z + dist);
+    this.camera.lookAt(center.x, box.min.y + size.y * 0.52, center.z);
+
+    // Safe near/far
+    this.camera.near = dist * 0.001;
+    this.camera.far  = dist * 100;
     this.camera.updateProjectionMatrix();
 
-    // Wireframe style
-    root.traverse(child => {
-      if (!child.isMesh) return;
-      const hair = /hair/i.test(child.name);
-      const lash = /lash|brow/i.test(child.name);
-      child.material = new THREE.MeshBasicMaterial({
-        color:       0xffd700,
-        wireframe:   true,
-        transparent: true,
-        opacity:     lash ? 0 : (hair ? 0.04 : 0.40),
-        blending:    THREE.AdditiveBlending,
-        depthWrite:  false,
-        skinning:    !!child.isSkinnedMesh
-      });
-    });
+    console.log('NEXA FitCamera | size:', size, '| dist:', dist.toFixed(2), '| eyeY:', eyeY.toFixed(2));
 
-    // Animations
-    if (gltf.animations && gltf.animations.length) {
-      this.mixer = new THREE.AnimationMixer(root);
-      const idle = gltf.animations.find(a => /idle|breath/i.test(a.name)) || gltf.animations[0];
-      this.idleAction = this.mixer.clipAction(idle);
-      this.idleAction.setLoop(THREE.LoopRepeat, Infinity).play();
-
-      const talk = gltf.animations.find(a => /talk|speak|gesture/i.test(a.name));
-      if (talk) {
-        this.talkAction = this.mixer.clipAction(talk);
-        this.talkAction.setLoop(THREE.LoopRepeat, Infinity);
-      }
+    // Effects at model scale
+    if (this.ring) {
+      this.ring.position.set(center.x, box.min.y + 0.001, center.z);
+      this.ring.scale.setScalar(size.x * 0.65);
     }
+    if (this.scan) {
+      this.scan.scale.x = size.x * 1.2;
+      this._scanMin = box.min.y;
+      this._scanMax = box.max.y;
+    }
+  }
 
-    this.model = root;
+  _addEffects() {
+    const rg = new THREE.RingGeometry(1, 1.25, 48);
+    this.ring = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({
+      color:0xffd700,transparent:true,opacity:0.3,
+      side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending
+    }));
+    this.ring.rotation.x = -Math.PI / 2;
+    this.scene.add(this.ring);
 
-    // 🔥 HARD RECENTER FIX (THIS IS WHAT YOU WERE MISSING)
-    setTimeout(() => {
-  this.camera.lookAt(0, size.y * 0.55, 0);
-  this.resize();
-}, 150);
-    this.resize();
-    setStatus('ONLINE');
+    const sg = new THREE.PlaneGeometry(2, 0.06);
+    this.scan = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({
+      color:0x88ddff,transparent:true,opacity:0.07,
+      depthWrite:false,blending:THREE.AdditiveBlending
+    }));
+    this.scene.add(this.scan);
+  }
 
-  }, undefined, err => {
-    console.warn('GLB failed:', err);
-    this._fallback();
-  });
-}
+  _load() {
+    this._addEffects();
+    if (typeof THREE.GLTFLoader === 'undefined') { this._fallback(); return; }
+
+    // Try both URL variants — double extension first, then single
+    const urls = [
+      'https://raw.githubusercontent.com/SmokeeInVR/Nexa-Command/main/nexa_avatar.glb.glb',
+      'https://raw.githubusercontent.com/SmokeeInVR/Nexa-Command/main/nexa_avatar.glb'
+    ];
+
+    const setStatus = s => {
+      const el = document.getElementById('nexaAvatarStatus');
+      if (el) el.textContent = s;
+      console.log('NEXA:', s);
+    };
+
+    const tryLoad = (urlIdx) => {
+      if (urlIdx >= urls.length) { this._fallback(); return; }
+      setStatus('SYNCING...');
+      console.log('Trying URL:', urls[urlIdx]);
+
+      new THREE.GLTFLoader().load(urls[urlIdx], (gltf) => {
+        console.log('GLB loaded from:', urls[urlIdx]);
+        const root = gltf.scene;
+
+        // Step 1: Measure RAW (before any transform)
+        this.scene.add(root);
+        const rawBox  = new THREE.Box3().setFromObject(root);
+        const rawSize = new THREE.Vector3();
+        rawBox.getSize(rawSize);
+        console.log('Raw size:', rawSize);
+
+        // Step 2: Scale to TARGET height = 200 units
+        // (200 is large enough that near/far won't clip it)
+        const TARGET = 200;
+        const sf = rawSize.y > 0.0001 ? TARGET / rawSize.y : 1;
+        root.scale.setScalar(sf);
+        console.log('Scale factor:', sf);
+
+        // Step 3: Re-measure after scaling
+        const box    = new THREE.Box3().setFromObject(root);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+
+        // Step 4: Center model — feet at y=0
+        root.position.x -= center.x;
+        root.position.z -= center.z;
+        root.position.y -= box.min.y;
+
+        // Step 5: Re-measure one final time (after centering)
+        const finalBox = new THREE.Box3().setFromObject(root);
+        console.log('Final box:', finalBox);
+
+        // Step 6: FitCamera — guaranteed to show model
+        this._fitCamera(finalBox);
+
+        // Step 7: Gold wireframe
+        root.traverse(child => {
+          if (!child.isMesh) return;
+          const isHair = /hair/i.test(child.name);
+          const isLash = /lash|brow/i.test(child.name);
+          child.material = new THREE.MeshBasicMaterial({
+            color:       0xffd700,
+            wireframe:   true,
+            transparent: true,
+            opacity:     isLash ? 0.0 : isHair ? 0.04 : 0.40,
+            blending:    THREE.AdditiveBlending,
+            depthWrite:  false,
+            skinning:    !!child.isSkinnedMesh
+          });
+        });
+
+        // Step 8: Animations
+        if (gltf.animations && gltf.animations.length) {
+          this.mixer = new THREE.AnimationMixer(root);
+          const idle = gltf.animations.find(a => /idle|breath/i.test(a.name)) || gltf.animations[0];
+          this.idleAction = this.mixer.clipAction(idle);
+          this.idleAction.setLoop(THREE.LoopRepeat, Infinity).play();
+          const talk = gltf.animations.find(a => /talk|speak/i.test(a.name));
+          if (talk) {
+            this.talkAction = this.mixer.clipAction(talk);
+            this.talkAction.setLoop(THREE.LoopRepeat, Infinity);
+          }
+        }
+
+        this.model = root;
+        this.resize();
+        setStatus('ONLINE');
+
+      }, xhr => {
+        const p = xhr.total ? Math.round(xhr.loaded/xhr.total*100) : '?';
+        setStatus('LOADING ' + p + '%');
+      }, err => {
+        console.warn('URL failed:', urls[urlIdx], err);
+        tryLoad(urlIdx + 1);  // try next URL
+      });
+    };
+
+    tryLoad(0);
+  }
 
   talk(ms = 15000) {
     this.talking = true;
@@ -1245,9 +1287,9 @@ class NEXAAvatar {
 
   _animate() {
     requestAnimationFrame(() => this._animate());
-    const d = this.clock.getDelta();
-    const t = this.clock.elapsedTime;
-    if (this.mixer) this.mixer.update(d);
+    const delta = this.clock.getDelta();
+    const t     = this.clock.elapsedTime;
+    if (this.mixer) this.mixer.update(delta);
 
     if (this.talking && performance.now() > this.talkEnd) {
       this.talking = false;
@@ -1261,8 +1303,9 @@ class NEXAAvatar {
 
     if (this.ring) this.ring.rotation.z = t * 0.4;
 
-    if (this.scan && this._modelH) {
-      this.scan.position.y = ((t * 0.8) % this._modelH);
+    if (this.scan && this._scanMin !== undefined) {
+      const range = this._scanMax - this._scanMin;
+      this.scan.position.y = this._scanMin + ((t * range * 0.4) % range);
       this.scan.material.opacity = 0.04 + 0.03 * Math.sin(t * 3);
     }
 
@@ -1287,39 +1330,35 @@ class NEXAAvatar {
   }
 
   _fallback() {
-    // Particle silhouette — shows something while GLB unavailable
-    const H = 1.8;
-    this.camera.position.set(0, H * 0.55, H * 1.4);
-    this.camera.lookAt(0, H * 0.5, 0);
-    this.camera.fov = 42;
+    console.log('NEXA: using particle fallback');
+    const H = 200;
+    this.camera.position.set(0, H*0.6, H*1.4);
+    this.camera.lookAt(0, H*0.5, 0);
+    this.camera.near = 0.1; this.camera.far = H*100;
     this.camera.updateProjectionMatrix();
-    this._modelH = H;
+    this._scanMin = 0; this._scanMax = H;
 
-    const count = 1200, pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const r = Math.random(), theta = Math.random() * Math.PI * 2;
-      const isHead = r < 0.2, isTorso = r < 0.6;
-      const y  = isHead ? H * 0.82 + Math.random() * H * 0.18
-               : isTorso ? H * 0.4 + Math.random() * H * 0.38
-               : Math.random() * H * 0.4;
-      const rx = isHead ? 0.08 : (isTorso ? 0.18 : 0.12);
-      const rz = isHead ? 0.07 : (isTorso ? 0.10 : 0.06);
-      pos[i*3]   = Math.cos(theta) * rx * H * (0.7 + Math.random() * 0.3);
-      pos[i*3+1] = y;
-      pos[i*3+2] = Math.sin(theta) * rz * H * (0.7 + Math.random() * 0.3);
+    if (this.ring) { this.ring.position.y=0.1; this.ring.scale.setScalar(H*0.18); }
+    if (this.scan) { this.scan.scale.x = H*0.4; }
+
+    const count = 1200, pos = new Float32Array(count*3);
+    for (let i=0;i<count;i++){
+      const r=Math.random(), theta=Math.random()*Math.PI*2;
+      const y = r<0.2 ? H*0.82+Math.random()*H*0.18 : r<0.6 ? H*0.4+Math.random()*H*0.38 : Math.random()*H*0.4;
+      const rx = r<0.2?H*0.08:r<0.6?H*0.18:H*0.12;
+      pos[i*3]=Math.cos(theta)*rx*(0.7+Math.random()*0.3);
+      pos[i*3+1]=y;
+      pos[i*3+2]=Math.sin(theta)*rx*0.35*(0.7+Math.random()*0.3);
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    this.model = new THREE.Points(geo, new THREE.PointsMaterial({
-      color: 0xffd700, size: 0.015, transparent: true, opacity: 0.8,
-      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    this.model=new THREE.Points(geo,new THREE.PointsMaterial({
+      color:0xffd700,size:H*0.009,transparent:true,opacity:0.85,
+      blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true
     }));
     this.scene.add(this.model);
-    this.ring.scale.setScalar(0.3);
-    this.scan.scale.x = 0.5;
-    const el = document.getElementById('nexaAvatarStatus');
-    if (el) el.textContent = 'STANDBY';
-    console.log('NEXA avatar: using particle fallback');
+    const el=document.getElementById('nexaAvatarStatus');
+    if(el) el.textContent='STANDBY';
   }
 }
 
@@ -1330,6 +1369,7 @@ function initNEXAAvatar() {
   window.nexaAvatar = new NEXAAvatar(c);
   window.addEventListener('resize', () => window.nexaAvatar && window.nexaAvatar.resize());
 }
+</script>
 </script>
 </script>
 <style>
