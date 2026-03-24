@@ -1193,68 +1193,84 @@ var NEXAAvatar = class {
   }
 
   _onLoaded(gltf) {
-    if (this.loadRing) { this.scene.remove(this.loadRing); this.loadRing = null; }
-    const root = gltf.scene;
-    this.model = root;
-    const box0 = new THREE.Box3().setFromObject(root);
-    const size0 = new THREE.Vector3();
-    box0.getSize(size0);
-    if (size0.y < 10) root.scale.setScalar(100);
-    const box = new THREE.Box3().setFromObject(root);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-    root.position.x -= center.x;
-    root.position.z -= center.z;
-    root.position.y -= box.min.y;
-    const h = size.y;
-// Camera frames the full body — positioned at chest height, sees full figure
-const bodyCenter = h * 0.75;
-const camDist    = h * 1.6;
-const camHeight  = h * 0.75;
-this.camera.position.set(0, camHeight, camDist);
-this.camera.lookAt(0, bodyCenter, 0);
-this.camera.fov = 42;
-this.camera.updateProjectionMatrix();
-root.traverse(child => {
-      if (!child.isMesh) return;
-      const isHair = /hair/i.test(child.name);
-      const isLash = /eyelash/i.test(child.name);
-      child.material = new THREE.MeshBasicMaterial({
-        color: 0xffd700, transparent: true,
-        opacity: isHair ? 0.02 : (isLash ? 0.0 : 0.45),
-        wireframe: true,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-        skinning: child.isSkinnedMesh
-      });
-      child.castShadow = child.receiveShadow = false;
-    });
-    this.scene.add(root);
-    root.rotation.y = Math.PI / 2;
-    this.rendere.setDize(this.cnva.width,380, false);
-    this.camera.aspect = this.canvas.width / 380;
-    this.camera.updateProjectionMatrix();
-    const scl = size.x * 0.6;
-    if (this.ring) this.ring.scale.setScalar(scl / 30);
-    if (this.outerRing) this.outerRing.scale.setScalar(scl / 30);
-    if (this.scan) this.scan.scale.x = size.x * 1.2;
-    if (gltf.animations && gltf.animations.length) {
-      this.mixer = new THREE.AnimationMixer(root);
-      const idleClip = gltf.animations.find(a => /idle|breath/i.test(a.name)) || gltf.animations[0];
-      this.idleAction = this.mixer.clipAction(idleClip);
-      this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
-      this.idleAction.play();
-      const talkClip = gltf.animations.find(a => /talk|speak|gesture/i.test(a.name));
-      if (talkClip) {
-        this.talkAction = this.mixer.clipAction(talkClip);
-        this.talkAction.setLoop(THREE.LoopRepeat, Infinity);
-      }
+    if (this.loadRing) { this.scene.remove(this.loadRing); this.loadRing = null; }
+    const root = gltf.scene;
+    this.model = root;
+
+    const box0 = new THREE.Box3().setFromObject(root);
+    const size0 = new THREE.Vector3();
+    box0.getSize(size0);
+    
+    if (size0.y < 10) {
+      root.scale.setScalar(100);
+      // CRITICAL FIX: Force Three.js to update the model's dimensions
+      root.updateMatrixWorld(true); 
     }
-    this._loaded = true;
-    const st = document.getElementById('nexaAvatarStatus');
-    if (st) st.textContent = 'STANDBY';
-  }
+
+    const box = new THREE.Box3().setFromObject(root);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    
+    root.position.x -= center.x;
+    root.position.z -= center.z;
+    root.position.y -= box.min.y;
+    
+    const h = size.y;
+    
+    // Camera framing: Looking at the upper body
+    const bodyCenter = h * 0.75;
+    const camDist    = h * 1.6;
+    const camHeight  = h * 0.75;
+    
+    this.camera.position.set(0, camHeight, camDist);
+    this.camera.lookAt(0, bodyCenter, 0);
+    this.camera.fov = 42;
+    this.camera.updateProjectionMatrix();
+
+    root.traverse(child => {
+      if (!child.isMesh) return;
+      const isHair = /hair/i.test(child.name);
+      const isLash = /eyelash/i.test(child.name);
+      child.material = new THREE.MeshBasicMaterial({
+        color: 0xffd700, transparent: true,
+        opacity: isHair ? 0.02 : (isLash ? 0.0 : 0.45),
+        wireframe: true,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+        skinning: child.isSkinnedMesh
+      });
+      child.castShadow = child.receiveShadow = false;
+    });
+    
+    this.scene.add(root);
+    root.rotation.y = Math.PI / 2;
+
+    // CRITICAL FIX: Replaced the typo line with your built-in resize method
+    this.resize();
+
+    const scl = size.x * 0.6;
+    if (this.ring) this.ring.scale.setScalar(scl / 30);
+    if (this.outerRing) this.outerRing.scale.setScalar(scl / 30);
+    if (this.scan) this.scan.scale.x = size.x * 1.2;
+    
+    if (gltf.animations && gltf.animations.length) {
+      this.mixer = new THREE.AnimationMixer(root);
+      const idleClip = gltf.animations.find(a => /idle|breath/i.test(a.name)) || gltf.animations[0];
+      this.idleAction = this.mixer.clipAction(idleClip);
+      this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
+      this.idleAction.play();
+      const talkClip = gltf.animations.find(a => /talk|speak|gesture/i.test(a.name));
+      if (talkClip) {
+        this.talkAction = this.mixer.clipAction(talkClip);
+        this.talkAction.setLoop(THREE.LoopRepeat, Infinity);
+      }
+    }
+    
+    this._loaded = true;
+    const st = document.getElementById('nexaAvatarStatus');
+    if (st) st.textContent = 'STANDBY';
+  }
 
   talk(ms = 15000) {
     this.talking = true;
