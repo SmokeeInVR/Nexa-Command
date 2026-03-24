@@ -1208,7 +1208,7 @@ var NEXAAvatar = class {
     root.position.x -= center.x;
     root.position.z -= center.z;
     root.position.y -= box.min.y;
-    // Get proper bounding box center
+// Get proper bounding box center
 const center = new THREE.Vector3();
 box.getCenter(center);
 
@@ -1233,14 +1233,6 @@ this.camera.lookAt(center);
 this.camera.position.y += size.y * 0.15;
 
 this.camera.updateProjectionMatrix();
-
-// --- OPTIONAL: Cinematic framing (PUT IT RIGHT HERE) ---
-this.camera.position.y = center.y + size.y * 0.25;
-this.camera.lookAt(
-  center.x,
-  center.y + size.y * 0.15,
-  center.z
-);
 root.traverse(child => {
       if (!child.isMesh) return;
       const isHair = /hair/i.test(child.name);
