@@ -1147,47 +1147,35 @@ class NEXAAvatar {
     setStatus('SYNCING...');
 
     loader.load(url, (gltf) => {
+
+      // ── 1. Add to scene RAW (no scaling yet) ──
       const root = gltf.scene;
-      this.model = root;
       this.scene.add(root);
 
-      // 1. FORCE SCALE: Don't let the model decide its size.
-      // If 0.1 is still too big, try 0.01. 
-      // Most high-res GLBs are huge, so we start small.
-      root.scale.setScalar(0.05); 
-      root.updateMatrixWorld(true);
+      // ── 2. Measure raw bounding box ──
+      const rawBox  = new THREE.Box3().setFromObject(root);
+      const rawSize = new THREE.Vector3();
+      rawBox.getSize(rawSize);
 
-      // 2. RESET POSITION: Place her exactly at the world center floor.
-      root.position.set(0, 0, 0);
+      // ── 3. Auto-scale: make model exactly 1.8 units tall ──
+      const TARGET = 1.8;
+      const s = rawSize.y > 0 ? TARGET / rawSize.y : 1;
+      root.scale.setScalar(s);
 
-      // 3. LOCK CAMERA: Stop using "H" or "size". 
-      // We are placing the camera at a fixed spot in the dark.
-      this.camera.position.set(0, 80, 200); 
-      this.camera.lookAt(0, 70, 0); 
-      this.camera.updateProjectionMatrix();
+      // ── 4. Re-measure AFTER scaling ──
+      const box    = new THREE.Box3().setFromObject(root);
+      const size   = new THREE.Vector3();
+      const center = new THREE.Vector3();
+      box.getSize(size);
+      box.getCenter(center);
 
-      // 4. APPLY MATERIAL
-      root.traverse(child => {
-        if (child.isMesh) {
-          child.material = new THREE.MeshBasicMaterial({
-            color: 0xffd700,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.4,
-            skinning: true
-          });
-        }
-      });
-
-      // 5. ANIMATION
-      if (gltf.animations && gltf.animations.length) {
-        this.mixer = new THREE.AnimationMixer(root);
-        this.mixer.clipAction(gltf.animations[0]).play();
-      }
-
-      this.resize();
-      setStatus('ONLINE');
-    },
+     // ── 5. Sit model: HARD RESET to center ──
+      // We ignore the "center" math because it's pushing her into the corner.
+      root.position.set(0, 0, 0); 
+      
+      // If she is floating or buried, we manually nudge her Y. 
+      // Most Mixamo/ReadyPlayerMe models at scale 1.8 need y = 0.
+      root.position.y = 0; 
 
       // ── 6. Camera: FIXED CENTER VIEW ──
       const eyeY = 1.2;   // Camera height (chest level)
