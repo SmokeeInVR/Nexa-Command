@@ -1217,15 +1217,13 @@ var NEXAAvatar = class {
     root.position.z -= center.z;
     root.position.y -= box.min.y;
     
-    const h = size.y;
-    
-    // Camera framing: Looking at the upper body
-    const bodyCenter = h * 0.75;
-    const camDist    = h * 1.6;
-    const camHeight  = h * 0.75;
+    // Bypass buggy SkinnedMesh bounding boxes and hardcode the framing
+    // based on a 100x scale multiplier.
+    const camHeight = 110; // Roughly chest/face level
+    const camDist = 280;   // Distance from the avatar
     
     this.camera.position.set(0, camHeight, camDist);
-    this.camera.lookAt(0, bodyCenter, 0);
+    this.camera.lookAt(0, camHeight, 0);
     this.camera.fov = 42;
     this.camera.updateProjectionMatrix();
 
