@@ -1175,7 +1175,7 @@ class NEXAAvatar {
 
     // Camera setup (IMPROVED)
     const H    = size.y;
-    const dist = H * 1.8;
+    const dist = H * 1.4;
     const eyeY = H * 0.7;
     const atY  = H * 0.55;
 
@@ -1220,16 +1220,9 @@ class NEXAAvatar {
 
     // 🔥 HARD RECENTER FIX (THIS IS WHAT YOU WERE MISSING)
     setTimeout(() => {
-      const box = new THREE.Box3().setFromObject(this.model);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-
-      this.camera.lookAt(center);
-      this.model.position.x -= center.x;
-
-      this.resize();
-    }, 150);
-
+  this.camera.lookAt(0, size.y * 0.55, 0);
+  this.resize();
+}, 150);
     this.resize();
     setStatus('ONLINE');
 
@@ -1347,7 +1340,7 @@ function initNEXAAvatar() {
 .nxa-status{font-size:10px;letter-spacing:2px;color:#ffd70077;}
 #nexaAvatarCanvas{
   width:100%;
-  height:420px; /* CRITICAL FIX */
+  height:420px;
   display:block;
 }
 .nxa-out{max-height:200px;overflow-y:auto;overflow-x:hidden;padding:12px 16px;border-top:1px solid #ffd70022;font-size:12px;line-height:1.65;color:#ccc;background:rgba(0,0,0,0.7);flex-shrink:0;word-wrap:break-word;overflow-wrap:break-word;width:100%;box-sizing:border-box;}
