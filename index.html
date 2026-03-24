@@ -1232,12 +1232,9 @@ root.traverse(child => {
     });
     this.scene.add(root);
     root.rotation.y = Math.PI / 2;
-    const w = this.canvas.clientWidth;
-const h = this.canvas.clientHeight;
-
-this.renderer.setSize(w, h, false);
-this.camera.aspect = w / h;
-this.camera.updateProjectionMatrix();
+    this.rendere.setDize(this.cnva.width,380, false);
+    this.camera.aspect = this.canvas.width / 380;
+    this.camera.updateProjectionMatrix();
     const scl = size.x * 0.6;
     if (this.ring) this.ring.scale.setScalar(scl / 30);
     if (this.outerRing) this.outerRing.scale.setScalar(scl / 30);
