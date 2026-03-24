@@ -1140,98 +1140,104 @@ class NEXAAvatar {
   }
 
   _load() {
-    if (typeof THREE.GLTFLoader === 'undefined') { this._fallback(); return; }
-    const loader = new THREE.GLTFLoader();
-    const url = 'https://raw.githubusercontent.com/SmokeeInVR/Nexa-Command/main/nexa_avatar.glb.glb';
-    const setStatus = s => { const el = document.getElementById('nexaAvatarStatus'); if (el) el.textContent = s; };
-    setStatus('SYNCING...');
+  if (typeof THREE.GLTFLoader === 'undefined') { this._fallback(); return; }
+  const loader = new THREE.GLTFLoader();
+  const url = 'https://raw.githubusercontent.com/SmokeeInVR/Nexa-Command/main/nexa_avatar.glb.glb';
+  const setStatus = s => { const el = document.getElementById('nexaAvatarStatus'); if (el) el.textContent = s; };
+  setStatus('SYNCING...');
 
-    loader.load(url, (gltf) => {
+  loader.load(url, (gltf) => {
 
-      // ── 1. Add to scene RAW (no scaling yet) ──
-      const root = gltf.scene;
-      this.scene.add(root);
+    const root = gltf.scene;
+    this.scene.add(root);
 
-      // ── 2. Measure raw bounding box ──
-      const rawBox  = new THREE.Box3().setFromObject(root);
-      const rawSize = new THREE.Vector3();
-      rawBox.getSize(rawSize);
+    // Measure raw size
+    const rawBox  = new THREE.Box3().setFromObject(root);
+    const rawSize = new THREE.Vector3();
+    rawBox.getSize(rawSize);
 
-      // ── 3. Auto-scale: make model exactly 1.8 units tall ──
-      const TARGET = 1.8;
-      const s = rawSize.y > 0 ? TARGET / rawSize.y : 1;
-      root.scale.setScalar(s);
+    // Normalize height
+    const TARGET = 1.8;
+    const s = rawSize.y > 0 ? TARGET / rawSize.y : 1;
+    root.scale.setScalar(s);
 
-      // ── 4. Re-measure AFTER scaling ──
-      const box    = new THREE.Box3().setFromObject(root);
-      const size   = new THREE.Vector3();
+    // Recalculate AFTER scale
+    const box    = new THREE.Box3().setFromObject(root);
+    const size   = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+
+    // Center + ground
+    root.position.x -= center.x;
+    root.position.z -= center.z;
+    root.position.y -= box.min.y;
+
+    // Camera setup (IMPROVED)
+    const H    = size.y;
+    const dist = H * 1.8;
+    const eyeY = H * 0.7;
+    const atY  = H * 0.55;
+
+    this.camera.position.set(0, eyeY, dist);
+    this.camera.lookAt(0, atY, 0);
+    this.camera.near = H * 0.001;
+    this.camera.far  = H * 100;
+    this.camera.fov  = 42;
+    this.camera.updateProjectionMatrix();
+
+    // Wireframe style
+    root.traverse(child => {
+      if (!child.isMesh) return;
+      const hair = /hair/i.test(child.name);
+      const lash = /lash|brow/i.test(child.name);
+      child.material = new THREE.MeshBasicMaterial({
+        color:       0xffd700,
+        wireframe:   true,
+        transparent: true,
+        opacity:     lash ? 0 : (hair ? 0.04 : 0.40),
+        blending:    THREE.AdditiveBlending,
+        depthWrite:  false,
+        skinning:    !!child.isSkinnedMesh
+      });
+    });
+
+    // Animations
+    if (gltf.animations && gltf.animations.length) {
+      this.mixer = new THREE.AnimationMixer(root);
+      const idle = gltf.animations.find(a => /idle|breath/i.test(a.name)) || gltf.animations[0];
+      this.idleAction = this.mixer.clipAction(idle);
+      this.idleAction.setLoop(THREE.LoopRepeat, Infinity).play();
+
+      const talk = gltf.animations.find(a => /talk|speak|gesture/i.test(a.name));
+      if (talk) {
+        this.talkAction = this.mixer.clipAction(talk);
+        this.talkAction.setLoop(THREE.LoopRepeat, Infinity);
+      }
+    }
+
+    this.model = root;
+
+    // 🔥 HARD RECENTER FIX (THIS IS WHAT YOU WERE MISSING)
+    setTimeout(() => {
+      const box = new THREE.Box3().setFromObject(this.model);
       const center = new THREE.Vector3();
-      box.getSize(size);
       box.getCenter(center);
 
-      // ── 5. Sit model: feet at y = 0 ──
-      root.position.x -= center.x;
-      root.position.z -= center.z;
-      root.position.y -= box.min.y;
+      this.camera.lookAt(center);
+      this.model.position.x -= center.x;
 
-      // ── 6. Camera: frame full body ──
-      // After step 5: feet=0, head=size.y (~1.8)
-      const H    = size.y;
-      const dist = H * 1.3;        // back far enough to see full figure
-      const eyeY = H * 0.55;       // camera at chest height
-      const atY  = H * 0.50;       // look at body center
-
-      this.camera.position.set(0, eyeY, dist);
-      this.camera.lookAt(0, atY, 0);
-      this.camera.near = H * 0.001;
-      this.camera.far  = H * 100;
-      this.camera.fov  = 42;
-      this.camera.updateProjectionMatrix();
-      
-      // ── 8. Gold wireframe material ──
-      root.traverse(child => {
-        if (!child.isMesh) return;
-        const hair = /hair/i.test(child.name);
-        const lash = /lash|brow/i.test(child.name);
-        child.material = new THREE.MeshBasicMaterial({
-          color:       0xffd700,
-          wireframe:   true,
-          transparent: true,
-          opacity:     lash ? 0 : (hair ? 0.04 : 0.40),
-          blending:    THREE.AdditiveBlending,
-          depthWrite:  false,
-          skinning:    !!child.isSkinnedMesh
-        });
-        child.castShadow = child.receiveShadow = false;
-      });
-
-      // ── 9. Animations ──
-      if (gltf.animations && gltf.animations.length) {
-        this.mixer     = new THREE.AnimationMixer(root);
-        const idle     = gltf.animations.find(a => /idle|breath/i.test(a.name)) || gltf.animations[0];
-        this.idleAction = this.mixer.clipAction(idle);
-        this.idleAction.setLoop(THREE.LoopRepeat, Infinity).play();
-        const talk = gltf.animations.find(a => /talk|speak|gesture/i.test(a.name));
-        if (talk) {
-          this.talkAction = this.mixer.clipAction(talk);
-          this.talkAction.setLoop(THREE.LoopRepeat, Infinity);
-        }
-      }
-
-      this.model = root;
       this.resize();
-      setStatus('ONLINE');
-      console.log('NEXA avatar loaded. Model height:', H.toFixed(3), 'units. Camera dist:', dist.toFixed(3));
+    }, 150);
 
-    }, xhr => {
-      const p = xhr.total ? Math.round(xhr.loaded / xhr.total * 100) : '?';
-      const el = document.getElementById('nexaAvatarStatus');
-      if (el) el.textContent = 'LOADING ' + p + '%';
-    }, err => {
-      console.warn('GLB failed:', err);
-      this._fallback();
-    });
-  }
+    this.resize();
+    setStatus('ONLINE');
+
+  }, undefined, err => {
+    console.warn('GLB failed:', err);
+    this._fallback();
+  });
+}
 
   talk(ms = 15000) {
     this.talking = true;
@@ -1339,7 +1345,11 @@ function initNEXAAvatar() {
 .nxa-hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid #ffd70033;flex-shrink:0;}
 .nxa-title{font-size:12px;font-weight:700;letter-spacing:4px;color:#ffd700;}
 .nxa-status{font-size:10px;letter-spacing:2px;color:#ffd70077;}
-#nexaAvatarCanvas{flex:1;width:100%;display:block;min-height:0;}
+#nexaAvatarCanvas{
+  width:100%;
+  height:420px; /* CRITICAL FIX */
+  display:block;
+}
 .nxa-out{max-height:200px;overflow-y:auto;overflow-x:hidden;padding:12px 16px;border-top:1px solid #ffd70022;font-size:12px;line-height:1.65;color:#ccc;background:rgba(0,0,0,0.7);flex-shrink:0;word-wrap:break-word;overflow-wrap:break-word;width:100%;box-sizing:border-box;}
 .nxa-out *{max-width:100%;word-wrap:break-word;overflow-wrap:break-word;}
 .nxa-out-placeholder{color:#ffd70044;font-style:italic;text-align:center;padding:6px 0;font-size:11px;letter-spacing:1px;}
