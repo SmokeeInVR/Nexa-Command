@@ -1219,7 +1219,8 @@ var NEXAAvatar = class {
         color: 0xffd700, transparent: true,
         opacity: isHair ? 0.02 : (isLash ? 0.0 : 0.45),
         wireframe: true,
-        blending: THREE.AdditiveBlending, depthWrite: false
+        blending: THREE.AdditiveBlending, depthWrite: false,
+        skinning: child.isSkinnedMesh
       });
       child.castShadow = child.receiveShadow = false;
     });
@@ -1988,8 +1989,8 @@ async function nexaSpeakBrief(){
   if(text.length<10) return;
   btn.innerHTML='&#9646;&#9646; STOP';btn.classList.add('active');
   window._nexaSpeaking=true;
-  const key=window.NEXA_ELEVEN_KEY;
-  const voice=window.NEXA_ELEVEN_VOICE||'EXAVITQu4vr4xnSDxMaL';
+  const key=window.NEXA_ELEVEN_KEY||localStorage.getItem('nexaElevenKey')||'';
+  const voice=window.NEXA_ELEVEN_VOICE||localStorage.getItem('nexaElevenVoice')||'FgAMzMbhHK7rfN8WhiLw';
   if(key){
     try{
       if(window.nexaAvatar) window.nexaAvatar.talk(20000);
