@@ -1210,8 +1210,8 @@ var NEXAAvatar = class {
     root.position.y -= box.min.y;
     const h = size.y;
 // Camera frames the full body — positioned at chest height, sees full figure
-const bodyCenter = h * 0.75;
-const camDist    = h * 1.25;
+const bodyCenter = h * 0.8;
+const camDist    = h * 1.00;
 const camHeight  = h * 0.55;
 this.camera.position.set(0, camHeight, camDist);
 this.camera.lookAt(0, bodyCenter, 0);
