@@ -1220,14 +1220,6 @@ var NEXAAvatar = class {
       });
       child.castShadow = child.receiveShadow = false;
     });
-      const wf = child.clone();
-      wf.material = new THREE.MeshBasicMaterial({
-        color: 0x88ddff, wireframe: true, transparent: true,
-        opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false
-      });
-      child.parent.add(wf);
-      child.castShadow = child.receiveShadow = false;
-    });
     this.scene.add(root);
     const scl = size.x * 0.6;
     if (this.ring) this.ring.scale.setScalar(scl / 30);
@@ -3645,7 +3637,6 @@ function renderAlertItem(a){
     +'</div>'
   +'</div>';
 }
-windo
 
 
 window.addEventListener('load',()=>{
