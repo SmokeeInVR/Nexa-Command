@@ -1174,20 +1174,19 @@ class NEXAAvatar {
       root.position.z -= center.z;
       root.position.y -= box.min.y;
 
-      // ── 6. Camera: frame full body ──
-      // After step 5: feet=0, head=size.y (~1.8)
-      const H    = size.y;
-      const dist = H * 1.3;        // back far enough to see full figure
-      const eyeY = H * 0.55;       // camera at chest height
-      const atY  = H * 0.50;       // look at body center
+      // ── 6. Camera: FIXED FRAMING ──
+      // Since H is exactly 1.8, we know exactly where her head and chest are.
+      const eyeY = 1.5;   // Position camera at head/shoulder level
+      const dist = 3.5;   // Pull back far enough to see her
+      const atY  = 1.0;   // Look at her chest/upper torso
 
       this.camera.position.set(0, eyeY, dist);
       this.camera.lookAt(0, atY, 0);
-      this.camera.near = H * 0.001;
-      this.camera.far  = H * 100;
-      this.camera.fov  = 42;
+      
+      this.camera.near = 0.01;
+      this.camera.far  = 1000;
+      this.camera.fov  = 35; // Slightly zoomed in for a better profile
       this.camera.updateProjectionMatrix();
-
       // ── 7. Scale effects to match model ──
       const R = size.x * 0.8;
       this.ring.scale.setScalar(R);
