@@ -1208,15 +1208,39 @@ var NEXAAvatar = class {
     root.position.x -= center.x;
     root.position.z -= center.z;
     root.position.y -= box.min.y;
-    const h = size.y;
-// Camera frames the full body — positioned at chest height, sees full figure
-const bodyCenter = h * 0.5;
-const camDist    = h * 1.25;
-const camHeight  = h * 0.55;
-this.camera.position.set(0, camHeight, camDist);
-this.camera.lookAt(0, bodyCenter, 0);
-this.camera.fov = 42;
+    // Get proper bounding box center
+const center = new THREE.Vector3();
+box.getCenter(center);
+
+const size = new THREE.Vector3();
+box.getSize(size);
+
+// Better framing
+const maxDim = Math.max(size.x, size.y, size.z);
+
+// Distance based on FOV so model fits correctly
+const fov = this.camera.fov * (Math.PI / 180);
+let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+
+// Add some padding so it’s not too tight
+cameraZ *= 1.4;
+
+// Position camera centered on model
+this.camera.position.set(center.x, center.y, cameraZ);
+this.camera.lookAt(center);
+
+// Optional: slight upward bias so it feels more natural (not feet-focused)
+this.camera.position.y += size.y * 0.15;
+
 this.camera.updateProjectionMatrix();
+
+// --- OPTIONAL: Cinematic framing (PUT IT RIGHT HERE) ---
+this.camera.position.y = center.y + size.y * 0.25;
+this.camera.lookAt(
+  center.x,
+  center.y + size.y * 0.15,
+  center.z
+);
 root.traverse(child => {
       if (!child.isMesh) return;
       const isHair = /hair/i.test(child.name);
