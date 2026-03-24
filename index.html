@@ -1094,12 +1094,12 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
 <script>
 class NEXAAvatar {
   constructor(canvasEl) {
-    this.canvas = canvasEl;
-    this.clock = new THREE.Clock();
-    this.mixer = null;
-    this.model = null;
-    this.talking = false;
-    this.talkEnd = 0;
+    this.canvas   = canvasEl;
+    this.clock    = new THREE.Clock();
+    this.mixer    = null;
+    this.model    = null;
+    this.talking  = false;
+    this.talkEnd  = 0;
     this._init();
     this._addEffects();
     this._load();
@@ -1107,41 +1107,35 @@ class NEXAAvatar {
   }
 
   _init() {
-    const w = this.canvas.clientWidth || 400;
+    const w = this.canvas.clientWidth  || 400;
     const h = this.canvas.clientHeight || 400;
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x000000);
-    // Camera will be repositioned after model loads
-    this.camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 10000);
-    this.camera.position.set(0, 150, 300);
-    this.camera.lookAt(0, 100, 0);
+    this.camera = new THREE.PerspectiveCamera(40, w / h, 0.001, 100000);
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
     this.renderer.setSize(w, h, false);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.scene.add(new THREE.AmbientLight(0xffd700, 0.8));
-    const front = new THREE.PointLight(0x88ddff, 0.5, 2000);
-    front.position.set(0, 200, 300);
-    this.scene.add(front);
+    this.scene.add(new THREE.AmbientLight(0xffd700, 1.0));
+    const pt = new THREE.PointLight(0x88ddff, 0.6, 100000);
+    pt.position.set(0, 1, 1);
+    this.scene.add(pt);
   }
 
   _addEffects() {
-    // Ground ring
-    const rg = new THREE.RingGeometry(30, 38, 48);
-    const rm = new THREE.MeshBasicMaterial({
+    // Ground ring — will be repositioned after model loads
+    const rg = new THREE.RingGeometry(1, 1.2, 48);
+    this.ring = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({
       color: 0xffd700, transparent: true, opacity: 0.3,
       side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
-    });
-    this.ring = new THREE.Mesh(rg, rm);
+    }));
     this.ring.rotation.x = -Math.PI / 2;
-    this.ring.position.y = 1;
     this.scene.add(this.ring);
     // Scan line
-    const sg = new THREE.PlaneGeometry(120, 3);
-    const sm = new THREE.MeshBasicMaterial({
-      color: 0x88ddff, transparent: true, opacity: 0.08,
+    const sg = new THREE.PlaneGeometry(3, 0.08);
+    this.scan = new THREE.Mesh(sg, new THREE.MeshBasicMaterial({
+      color: 0x88ddff, transparent: true, opacity: 0.07,
       depthWrite: false, blending: THREE.AdditiveBlending
-    });
-    this.scan = new THREE.Mesh(sg, sm);
+    }));
     this.scene.add(this.scan);
   }
 
@@ -1149,94 +1143,99 @@ class NEXAAvatar {
     if (typeof THREE.GLTFLoader === 'undefined') { this._fallback(); return; }
     const loader = new THREE.GLTFLoader();
     const url = 'https://raw.githubusercontent.com/SmokeeInVR/Nexa-Command/main/nexa_avatar.glb.glb';
-    const status = document.getElementById('nexaAvatarStatus');
-    if (status) status.textContent = 'SYNCING...';
+    const setStatus = s => { const el = document.getElementById('nexaAvatarStatus'); if (el) el.textContent = s; };
+    setStatus('SYNCING...');
 
     loader.load(url, (gltf) => {
-      const root = gltf.scene;
 
-      // ── Step 1: Add to scene at origin ──
+      // ── 1. Add to scene RAW (no scaling yet) ──
+      const root = gltf.scene;
       this.scene.add(root);
 
-      // ── Step 2: Measure raw size before scaling ──
-      const rawBox = new THREE.Box3().setFromObject(root);
+      // ── 2. Measure raw bounding box ──
+      const rawBox  = new THREE.Box3().setFromObject(root);
       const rawSize = new THREE.Vector3();
       rawBox.getSize(rawSize);
 
-      // ── Step 3: Scale so model is ~200 units tall ──
-      const TARGET_HEIGHT = 200;
-      const scaleFactor = rawSize.y > 0.01 ? TARGET_HEIGHT / rawSize.y : 100;
-      root.scale.setScalar(scaleFactor);
+      // ── 3. Auto-scale: make model exactly 1.8 units tall ──
+      const TARGET = 1.8;
+      const s = rawSize.y > 0 ? TARGET / rawSize.y : 1;
+      root.scale.setScalar(s);
 
-      // ── Step 4: Re-measure after scaling ──
-      const box = new THREE.Box3().setFromObject(root);
-      const size = new THREE.Vector3();
+      // ── 4. Re-measure AFTER scaling ──
+      const box    = new THREE.Box3().setFromObject(root);
+      const size   = new THREE.Vector3();
       const center = new THREE.Vector3();
       box.getSize(size);
       box.getCenter(center);
 
-      // ── Step 5: Sit model on floor (y=0) ──
+      // ── 5. Sit model: feet at y = 0 ──
       root.position.x -= center.x;
       root.position.z -= center.z;
-      root.position.y -= box.min.y;  // feet at y=0
+      root.position.y -= box.min.y;
 
-      // ── Step 6: Position camera to see FULL body ──
-      // After repositioning: feet=0, head=size.y
-      const modelTop    = size.y;
-      const modelMid    = size.y * 0.52;   // look at slightly above center (chest)
-      const camHeight   = size.y * 0.58;   // camera at chest height
-      const camDistance = size.y * 1.2;    // far enough to see full body
+      // ── 6. Camera: frame full body ──
+      // After step 5: feet=0, head=size.y (~1.8)
+      const H    = size.y;
+      const dist = H * 1.3;        // back far enough to see full figure
+      const eyeY = H * 0.55;       // camera at chest height
+      const atY  = H * 0.50;       // look at body center
 
-      this.camera.position.set(0, camHeight, camDistance);
-      this.camera.lookAt(0, modelMid, 0);
-      this.camera.fov = 42;
+      this.camera.position.set(0, eyeY, dist);
+      this.camera.lookAt(0, atY, 0);
+      this.camera.near = H * 0.001;
+      this.camera.far  = H * 100;
+      this.camera.fov  = 42;
       this.camera.updateProjectionMatrix();
 
-      // ── Step 7: Scale effects to model ──
-      const scl = size.x * 0.7;
-      if (this.ring) this.ring.scale.setScalar(scl / 32);
-      if (this.scan) this.scan.scale.x = size.x * 1.3;
+      // ── 7. Scale effects to match model ──
+      const R = size.x * 0.8;
+      this.ring.scale.setScalar(R);
+      this.ring.position.y = 0.01;
+      this.scan.scale.x    = size.x * 1.5;
+      this._modelH = H;
 
-      // ── Step 8: Apply gold wireframe material ──
+      // ── 8. Gold wireframe material ──
       root.traverse(child => {
         if (!child.isMesh) return;
-        const isHair  = /hair/i.test(child.name);
-        const isLash  = /lash/i.test(child.name);
+        const hair = /hair/i.test(child.name);
+        const lash = /lash|brow/i.test(child.name);
         child.material = new THREE.MeshBasicMaterial({
-          color: 0xffd700,
-          wireframe: true,
+          color:       0xffd700,
+          wireframe:   true,
           transparent: true,
-          opacity: isHair ? 0.05 : (isLash ? 0.0 : 0.42),
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-          skinning: !!child.isSkinnedMesh
+          opacity:     lash ? 0 : (hair ? 0.04 : 0.40),
+          blending:    THREE.AdditiveBlending,
+          depthWrite:  false,
+          skinning:    !!child.isSkinnedMesh
         });
         child.castShadow = child.receiveShadow = false;
       });
 
-      // ── Step 9: Animations ──
+      // ── 9. Animations ──
       if (gltf.animations && gltf.animations.length) {
-        this.mixer = new THREE.AnimationMixer(root);
-        const idleClip = gltf.animations.find(a => /idle|breath/i.test(a.name)) || gltf.animations[0];
-        this.idleAction = this.mixer.clipAction(idleClip);
-        this.idleAction.setLoop(THREE.LoopRepeat, Infinity);
-        this.idleAction.play();
-        const talkClip = gltf.animations.find(a => /talk|speak|gesture/i.test(a.name));
-        if (talkClip) {
-          this.talkAction = this.mixer.clipAction(talkClip);
+        this.mixer     = new THREE.AnimationMixer(root);
+        const idle     = gltf.animations.find(a => /idle|breath/i.test(a.name)) || gltf.animations[0];
+        this.idleAction = this.mixer.clipAction(idle);
+        this.idleAction.setLoop(THREE.LoopRepeat, Infinity).play();
+        const talk = gltf.animations.find(a => /talk|speak|gesture/i.test(a.name));
+        if (talk) {
+          this.talkAction = this.mixer.clipAction(talk);
           this.talkAction.setLoop(THREE.LoopRepeat, Infinity);
         }
       }
 
       this.model = root;
-      if (status) status.textContent = 'ONLINE';
+      this.resize();
+      setStatus('ONLINE');
+      console.log('NEXA avatar loaded. Model height:', H.toFixed(3), 'units. Camera dist:', dist.toFixed(3));
 
     }, xhr => {
-      const pct = xhr.total ? Math.round(xhr.loaded / xhr.total * 100) : '?';
-      const st = document.getElementById('nexaAvatarStatus');
-      if (st) st.textContent = 'LOADING ' + pct + '%';
+      const p = xhr.total ? Math.round(xhr.loaded / xhr.total * 100) : '?';
+      const el = document.getElementById('nexaAvatarStatus');
+      if (el) el.textContent = 'LOADING ' + p + '%';
     }, err => {
-      console.warn('GLB load failed:', err);
+      console.warn('GLB failed:', err);
       this._fallback();
     });
   }
@@ -1244,8 +1243,8 @@ class NEXAAvatar {
   talk(ms = 15000) {
     this.talking = true;
     this.talkEnd = performance.now() + ms;
-    const st = document.getElementById('nexaAvatarStatus');
-    if (st) st.textContent = 'SPEAKING';
+    const el = document.getElementById('nexaAvatarStatus');
+    if (el) el.textContent = 'SPEAKING';
     if (this.talkAction && this.idleAction) {
       this.talkAction.reset().play();
       this.idleAction.crossFadeTo(this.talkAction, 0.4, false);
@@ -1254,36 +1253,32 @@ class NEXAAvatar {
 
   _animate() {
     requestAnimationFrame(() => this._animate());
-    const delta = this.clock.getDelta();
+    const d = this.clock.getDelta();
     const t = this.clock.elapsedTime;
-    if (this.mixer) this.mixer.update(delta);
+    if (this.mixer) this.mixer.update(d);
 
-    // Stop talking
     if (this.talking && performance.now() > this.talkEnd) {
       this.talking = false;
-      const st = document.getElementById('nexaAvatarStatus');
-      if (st) st.textContent = 'ONLINE';
+      const el = document.getElementById('nexaAvatarStatus');
+      if (el) el.textContent = 'ONLINE';
       if (this.talkAction && this.idleAction) {
         this.idleAction.reset().play();
         this.talkAction.crossFadeTo(this.idleAction, 0.4, false);
       }
     }
 
-    // Animate effects
     if (this.ring) this.ring.rotation.z = t * 0.4;
-    if (this.scan) {
-      const modelH = this.model ? this.camera.position.y * 1.8 : 200;
-      this.scan.position.y = ((t * 45) % modelH) + 2;
+
+    if (this.scan && this._modelH) {
+      this.scan.position.y = ((t * 0.8) % this._modelH);
       this.scan.material.opacity = 0.04 + 0.03 * Math.sin(t * 3);
     }
 
-    // Subtle wireframe flicker
     if (this.model) {
-      const flicker = 0.38 + 0.06 * Math.sin(t * 7.3) + 0.03 * Math.sin(t * 13.1);
-      this.model.traverse(child => {
-        if (child.isMesh && child.material && child.material.wireframe) {
-          if (child.material.opacity > 0.01) child.material.opacity = flicker;
-        }
+      const flicker = 0.36 + 0.06 * Math.sin(t * 7.3) + 0.02 * Math.sin(t * 17);
+      this.model.traverse(c => {
+        if (c.isMesh && c.material && c.material.wireframe && c.material.opacity > 0.01)
+          c.material.opacity = flicker;
       });
     }
 
@@ -1300,30 +1295,39 @@ class NEXAAvatar {
   }
 
   _fallback() {
-    // Gold particle silhouette fallback
-    this.camera.position.set(0, 100, 220);
-    this.camera.lookAt(0, 100, 0);
-    const count = 1200;
-    const positions = new Float32Array(count * 3);
+    // Particle silhouette — shows something while GLB unavailable
+    const H = 1.8;
+    this.camera.position.set(0, H * 0.55, H * 1.4);
+    this.camera.lookAt(0, H * 0.5, 0);
+    this.camera.fov = 42;
+    this.camera.updateProjectionMatrix();
+    this._modelH = H;
+
+    const count = 1200, pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      const t = i / count;
-      const theta = Math.random() * Math.PI * 2;
-      const ySection = t < 0.15 ? 170 + Math.random() * 25 : (t < 0.35 ? 130 + Math.random() * 30 : 60 + Math.random() * 60);
-      const r = t < 0.15 ? 12 : (t < 0.35 ? 22 : 30 + Math.random() * 10);
-      positions[i*3]     = Math.cos(theta) * r * (1 - Math.random() * 0.3);
-      positions[i*3 + 1] = ySection;
-      positions[i*3 + 2] = Math.sin(theta) * r * 0.35;
+      const r = Math.random(), theta = Math.random() * Math.PI * 2;
+      const isHead = r < 0.2, isTorso = r < 0.6;
+      const y  = isHead ? H * 0.82 + Math.random() * H * 0.18
+               : isTorso ? H * 0.4 + Math.random() * H * 0.38
+               : Math.random() * H * 0.4;
+      const rx = isHead ? 0.08 : (isTorso ? 0.18 : 0.12);
+      const rz = isHead ? 0.07 : (isTorso ? 0.10 : 0.06);
+      pos[i*3]   = Math.cos(theta) * rx * H * (0.7 + Math.random() * 0.3);
+      pos[i*3+1] = y;
+      pos[i*3+2] = Math.sin(theta) * rz * H * (0.7 + Math.random() * 0.3);
     }
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const mat = new THREE.PointsMaterial({
-      color: 0xffd700, size: 1.8, transparent: true, opacity: 0.85,
-      blending: THREE.AdditiveBlending, depthWrite: false
-    });
-    this.model = new THREE.Points(geo, mat);
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.model = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: 0xffd700, size: 0.015, transparent: true, opacity: 0.8,
+      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true
+    }));
     this.scene.add(this.model);
-    const st = document.getElementById('nexaAvatarStatus');
-    if (st) st.textContent = 'ONLINE';
+    this.ring.scale.setScalar(0.3);
+    this.scan.scale.x = 0.5;
+    const el = document.getElementById('nexaAvatarStatus');
+    if (el) el.textContent = 'STANDBY';
+    console.log('NEXA avatar: using particle fallback');
   }
 }
 
@@ -1334,6 +1338,7 @@ function initNEXAAvatar() {
   window.nexaAvatar = new NEXAAvatar(c);
   window.addEventListener('resize', () => window.nexaAvatar && window.nexaAvatar.resize());
 }
+</script>
 </script>
 <style>
 #panel-nexa{background:#000;padding:0;overflow:hidden;}
