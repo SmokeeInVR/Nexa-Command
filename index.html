@@ -893,8 +893,8 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:300px;backgrou
       <!-- ADD CUSTOM BLOCK -->
       <div class="section-label">+ Add Block</div>
       <div style="display:grid;grid-template-columns:72px 72px 1fr;gap:8px;margin-bottom:8px;">
-        <input id="tbTime" placeholder="9:00" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;" oninput="autoFillEndTime()"/>
-        <input id="tbEndTime" placeholder="10:00" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;"/>
+        <input id="tbTime" placeholder="14:00 (24h)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;" oninput="autoFillEndTime()"/>
+        <input id="tbEndTime" placeholder="15:00" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;"/>
         <input id="tbLabel" placeholder="Inspection — Pine Canyon" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;"/>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
@@ -2296,10 +2296,18 @@ const DEFAULT_BLOCKS = [
   { id:'def_1', time:'6:30', label:'Wake Up · System Boot', icon:'🌅', type:'routine', startMins:390, endMins:420, isDefault:true },
   { id:'def_2', time:'7:00', label:'Morning Routine · Family', icon:'☕', type:'routine', startMins:420, endMins:480, isDefault:true },
   { id:'def_3', time:'12:00', label:'Lunch · Reset', icon:'🍽', type:'routine', startMins:720, endMins:780, isDefault:true },
-  { id:'def_4', time:'1:00', label:'Build / Deep Work', icon:'⚙️', type:'build', startMins:780, endMins:900, isDefault:true },
-  { id:'def_5', time:'3:00', label:'Family Time · Lily', icon:'👶', type:'family', startMins:900, endMins:1020, isDefault:true },
-  { id:'def_6', time:'5:00', label:'Dinner · Evening Wind Down', icon:'🌙', type:'routine', startMins:1020, endMins:1260, isDefault:true },
+  { id:'def_4', time:'13:00', label:'Build / Deep Work', icon:'⚙️', type:'build', startMins:780, endMins:900, isDefault:true },
+  { id:'def_5', time:'15:00', label:'Family Time · Mila', icon:'👶', type:'family', startMins:900, endMins:1020, isDefault:true },
+  { id:'def_6', time:'17:00', label:'Dinner · Evening Wind Down', icon:'🌙', type:'routine', startMins:1020, endMins:1260, isDefault:true },
 ];
+
+function minsToAMPM(mins) {
+  const h = Math.floor((mins || 0) / 60) % 24;
+  const m = (mins || 0) % 60;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+}
 
 function getStoredBlocks(){
   const stored = localStorage.getItem('nexa_all_blocks');
@@ -2325,7 +2333,7 @@ function editTimeBlock(id){
   if(!b) return;
   const newLabel = prompt('Edit block label:', b.label);
   if(newLabel === null) return;
-  const newTime = prompt('Edit time:', b.time);
+  const newTime = prompt('Edit time (24h format, e.g. 19:00):', b.time);
   if(newTime === null) return;
   b.label = newLabel.trim() || b.label;
   b.time = newTime.trim() || b.time;
@@ -2393,7 +2401,7 @@ function buildTimeBlocks(){
         <button onclick="deleteTimeBlock('${b.id}')" style="background:none;border:1px solid rgba(224,85,85,0.2);border-radius:3px;padding:1px 5px;color:var(--warn);font-family:'Share Tech Mono',monospace;font-size:8px;cursor:pointer;opacity:0.6;" title="Delete">✕</button>
       </div>` : '';
     return `<div style="display:flex;gap:10px;padding:8px 10px;border-radius:6px;background:${c.bg};border:1px solid ${c.border};${leftBorder}margin-bottom:6px;opacity:${opacity};align-items:center;">
-      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0;padding-top:2px;min-width:70px;">${b.time}${b.endTime?'–'+b.endTime:''}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text-dim);flex-shrink:0;padding-top:2px;min-width:70px;">${minsToAMPM(b.startMins||0)}${b.endMins?'–'+minsToAMPM(b.endMins):''}</div>
       <div style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;margin-top:2px;"></div>
       <div style="flex:1;">
         <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:${isCurrent?'#fff':'var(--text)'};font-weight:${isCurrent?'700':'400'};">
