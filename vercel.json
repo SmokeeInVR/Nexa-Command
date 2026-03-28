@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "functions": {
-    "api/proxy.js": { "maxDuration": 30 },
-    "api/nexa.js": { "maxDuration": 35 }
-  },
+  "builds": [
+    { "src": "api/proxy.js", "use": "@vercel/node" },
+    { "src": "api/nexa.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" }
+  ],
   "routes": [
     { "src": "/api/proxy(.*)", "dest": "/api/proxy.js" },
     { "src": "/api/nexa(.*)", "dest": "/api/nexa.js" },
@@ -12,13 +13,10 @@
 }
 ```
 ```
-This is the correct format:
-→ functions: declares the JS files
-  as serverless functions with timeout
-→ routes: maps URLs to those functions
-→ No "builds" array needed
-  Vercel auto-detects Node functions
-  in the /api folder
+MAKE SURE:
+→ No trailing comma after last item
+→ No extra spaces or characters
+→ Copy exactly as shown above
 
 Commit to main
 ─────────────────────────────────────
