@@ -1,15 +1,24 @@
 {
-  "rewrites": [
-    { "source": "/api/proxy/:path*", "destination": "/api/proxy.js" },
-    { "source": "/api/nexa/:path*", "destination": "/api/nexa.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "version": 2,
+  "functions": {
+    "api/proxy.js": { "maxDuration": 30 },
+    "api/nexa.js": { "maxDuration": 35 }
+  },
+  "routes": [
+    { "src": "/api/proxy(.*)", "dest": "/api/proxy.js" },
+    { "src": "/api/nexa(.*)", "dest": "/api/nexa.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
 ```
 ```
-This is the modern Vercel v2 format
-No "builds" needed — Vercel auto-detects
-Node.js functions in the /api folder
+This is the correct format:
+→ functions: declares the JS files
+  as serverless functions with timeout
+→ routes: maps URLs to those functions
+→ No "builds" array needed
+  Vercel auto-detects Node functions
+  in the /api folder
 
-Commit directly to main
+Commit to main
 ─────────────────────────────────────
