@@ -1,18 +1,15 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "api/proxy.js", "use": "@vercel/node" },
-    { "src": "api/nexa.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/api/proxy(.*)", "dest": "/api/proxy.js" },
-    { "src": "/api/nexa(.*)", "dest": "/api/nexa.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/api/proxy/:path*", "destination": "/api/proxy.js" },
+    { "source": "/api/nexa/:path*", "destination": "/api/nexa.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
 ```
 ```
+This is the modern Vercel v2 format
+No "builds" needed — Vercel auto-detects
+Node.js functions in the /api folder
+
 Commit directly to main
-Vercel auto-deploys in 2 min
 ─────────────────────────────────────
