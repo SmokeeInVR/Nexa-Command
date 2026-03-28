@@ -1,4 +1,4 @@
-const BRIDGE_URL = 'http://64.23.245.171:3001';
+const BRIDGE_URL = 'https://nexa-bridge.loca.lt';
 const BRIDGE_KEY = 'nexa-bridge-2026';
 
 export default async function handler(req, res) {
@@ -14,7 +14,10 @@ export default async function handler(req, res) {
   try {
     const response = await fetch(`${BRIDGE_URL}/message`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'bypass-tunnel-reminder': 'true'
+      },
       body: JSON.stringify({ message, key: BRIDGE_KEY }),
       signal: AbortSignal.timeout(35000)
     });
@@ -26,22 +29,24 @@ export default async function handler(req, res) {
 }
 ```
 ```
-5. Scroll down and click 
-   "Commit changes"
+4. Commit directly to main
 
-6. Click "Commit directly to main"
-
-7. Click green Commit button
-
-Vercel auto-deploys in 2 minutes
+Then we update index.html sendMessage()
+to call /api/nexa and the bridge
+is complete
 ─────────────────────────────────────
-THEN WE UPDATE THE EXPLORE TAB:
+ALSO — KEEP LOCALTUNNEL RUNNING:
 ─────────────────────────────────────
-After Vercel deploys we update
-index.html sendMessage() function
-to call /api/nexa instead of
-Anthropic directly
+The lt command must keep running
+in the DigitalOcean console
 
-That's the final step that wires
-everything together
+Open a NEW terminal session in
+DigitalOcean and run the gateway there
+Keep the localtunnel running in this
+session permanently
+
+Or better — run both with nohup:
+Ctrl+C to stop lt
+Then run:
+nohup lt --port 3001 --subdomain nexa-bridge > ~/lt.log 2>&1 &
 ─────────────────────────────────────
