@@ -11,12 +11,3 @@
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
-```
-```
-MAKE SURE:
-→ No trailing comma after last item
-→ No extra spaces or characters
-→ Copy exactly as shown above
-
-Commit to main
-─────────────────────────────────────
