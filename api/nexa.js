@@ -1,4 +1,4 @@
-const BRIDGE_URL = 'https://tate-spinproof-superindignantly.ngrok-free.dev;
+const BRIDGE_URL = 'https://tate-spinproof-superindignantly.ngrok-free.dev';
 const BRIDGE_KEY = 'nexa-bridge-2026';
 
 export default async function handler(req, res) {
