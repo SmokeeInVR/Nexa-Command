@@ -1,4 +1,4 @@
-const BRIDGE_URL = 'https://49c0601b-23df-45e7-b6c9-97c94f89ee07.cfargotunnel.com';
+const BRIDGE_URL = 'https://bridge.nexa-os.com';
 const BRIDGE_KEY = 'nexa-bridge-2026';
 
 export default async function handler(req, res) {
