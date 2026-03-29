@@ -2595,16 +2595,42 @@ function clearStoredKey(){NEXAKEY='';const hint=document.getElementById('storedK
 function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v.startsWith('sk-')){document.getElementById('keyError').style.display='block';return;}NEXAKEY=v;_saveKey(v);document.getElementById('keyModal').style.display='none';addMessage('nexa','System fully operational. Pulling live data from Nexa Finance now.');syncFinanceData();}
 let messages=[];
 async function sendMessage(){
-  if(!NEXAKEY){showKeyModal();return;}
-  const inp=document.getElementById('chatInput'),text=inp.value.trim();if(!text)return;inp.value='';inp.style.height='auto';
-  addMessage('user',text);messages.push({role:'user',content:text});const t=showTyping();
-  try{
-    const gc=northStar.goal?`\n\nNorth Star: "${northStar.goal}" (target: ${northStar.date||'none'}). Streak: ${streak.count} days.`:'';
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':NEXAKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system:NEXA_PERSONA+liveFinanceContext+liveMealContext+liveFitnessContext+liveFamilyContext+liveTradingContext+gc,messages})});
-    const d=await r.json();if(!r.ok){t.remove();addMessage('nexa','⚠ API Error: '+(d.error?.message||r.status));return;}
-    const reply=d.content?.[0]?.text||'Error.';t.remove();addMessage('nexa',reply);messages.push({role:'assistant',content:reply});if(messages.length>20)messages=messages.slice(-20);
-    speak(reply,'voiceOrb');
-  }catch(e){t.remove();addMessage('nexa','⚠ '+(e.message||'unknown'));}
+  const input = document.getElementById('chatInput');
+  const message = input ? input.value.trim() : '';
+  if (!message) return;
+  if (input) input.value = '';
+  
+  const chatMessages = document.getElementById('chatMessages');
+  if (chatMessages) {
+    chatMessages.innerHTML += '<div class="chat-msg user-msg">' + message + '</div>';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  const thinkingId = 'thinking-' + Date.now();
+  if (chatMessages) {
+    chatMessages.innerHTML += '<div id="' + thinkingId + '" class="chat-msg nexa-msg">Scanning...</div>';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  try {
+    const r = await fetch('/api/nexa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const data = await r.json();
+    let response = data.response || 'No response';
+    try {
+      const parsed = JSON.parse(response);
+      response = parsed.result?.payloads?.[0]?.text || response;
+    } catch(e) {}
+    const thinking = document.getElementById(thinkingId);
+    if (thinking) thinking.innerHTML = response;
+    if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+  } catch(err) {
+    const thinking = document.getElementById(thinkingId);
+    if (thinking) thinking.innerHTML = 'Bridge error: ' + err.message;
+  }
 }
 function addMessage(r,t){
   const c=document.getElementById('chatMessages');
