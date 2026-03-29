@@ -15,9 +15,10 @@ export default async function handler(req, res) {
     const response = await fetch(`${BRIDGE_URL}/message`, {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/json',
-        'bypass-tunnel-reminder': 'true'
-      },
+  'Content-Type': 'application/json',
+  'bypass-tunnel-reminder': 'true',
+  'ngrok-skip-browser-warning': 'true'
+},
       body: JSON.stringify({ message, key: BRIDGE_KEY }),
       signal: AbortSignal.timeout(35000)
     });
@@ -27,26 +28,3 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: 'Bridge unavailable', detail: err.message });
   }
 }
-```
-```
-4. Commit directly to main
-
-Then we update index.html sendMessage()
-to call /api/nexa and the bridge
-is complete
-─────────────────────────────────────
-ALSO — KEEP LOCALTUNNEL RUNNING:
-─────────────────────────────────────
-The lt command must keep running
-in the DigitalOcean console
-
-Open a NEW terminal session in
-DigitalOcean and run the gateway there
-Keep the localtunnel running in this
-session permanently
-
-Or better — run both with nohup:
-Ctrl+C to stop lt
-Then run:
-nohup lt --port 3001 --subdomain nexa-bridge > ~/lt.log 2>&1 &
-─────────────────────────────────────
