@@ -1,4 +1,4 @@
-const BRIDGE_URL = 'https://tate-spinproof-superindignantly.ngrok-free.dev';
+const BRIDGE_URL = 'https://49c0601b-23df-45e7-b6c9-97c94f89ee07.cfargotunnel.com';
 const BRIDGE_KEY = 'nexa-bridge-2026';
 
 export default async function handler(req, res) {
@@ -15,10 +15,8 @@ export default async function handler(req, res) {
     const response = await fetch(`${BRIDGE_URL}/message`, {
       method: 'POST',
       headers: { 
-  'Content-Type': 'application/json',
-  'bypass-tunnel-reminder': 'true',
-  'ngrok-skip-browser-warning': 'true'
-},
+  'Content-Type': 'application/json'
+      },  
       body: JSON.stringify({ message, key: BRIDGE_KEY }),
       signal: AbortSignal.timeout(35000)
     });
