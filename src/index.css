@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #0a0a0f;
+    color: #e8e4d9;
+  }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1a1a24; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2a2a38; }
+}
+
+@layer components {
+  .panel {
+    @apply bg-nexa-surface border border-nexa-border rounded-lg;
+  }
+  .panel-header {
+    @apply px-4 py-2.5 border-b border-nexa-border flex items-center gap-2;
+  }
+  .agent-dot {
+    @apply w-2 h-2 rounded-full flex-shrink-0;
+  }
+  .badge {
+    @apply text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider font-mono;
+  }
+  .cmd-input {
+    @apply bg-nexa-surface border border-nexa-border rounded-lg px-4 py-2.5
+           text-nexa-text placeholder-nexa-muted focus:outline-none
+           focus:border-nexa-gold/60 focus:ring-1 focus:ring-nexa-gold/20
+           transition-colors text-sm font-mono;
+  }
+  .section-label {
+    @apply text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-nexa-muted;
+  }
+}
+
+/* Scanline overlay — fixed, covers entire app */
+#root {
+  position: relative;
+}
+#root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.02) 2px,
+    rgba(0, 0, 0, 0.02) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Mobile view — < 768px */
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
+    display: flex !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+  .desktop-only {
+    display: flex !important;
+  }
+}
