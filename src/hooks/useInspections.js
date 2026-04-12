@@ -1,92 +1,4 @@
-import { useState, useCallback } from 'react'
-
-const MOCK_INSPECTIONS = [
-  {
-    woid: '884231',
-    insured: 'Bruce Shapiro',
-    address: '7181 E Camelback Rd #1203-1',
-    city: 'Scottsdale', state: 'AZ',
-    type: 'Interior High Value',
-    carrier: 'Auto-Owners',
-    phone: '(480) 555-0182',
-    dueDate: '2026-04-10',
-    assignedDate: '2026-03-29',
-    status: 'InProgress',
-    priority: 'High',
-    assignedTo: 'ella',
-    replacementCost: null,
-    notes: 'Reply all to confirm',
-    rentalRequired: false,
-  },
-  {
-    woid: '884197',
-    insured: 'Carol Henning',
-    address: '4388 N Scottsdale Rd #2201',
-    city: 'Scottsdale', state: 'AZ',
-    type: 'Exterior Only',
-    carrier: 'Chubb',
-    phone: '(602) 555-0341',
-    dueDate: '2026-04-12',
-    assignedDate: '2026-03-20',
-    status: 'Review',
-    priority: 'Medium',
-    assignedTo: 'ella',
-    replacementCost: null,
-    notes: 'Gate code needed',
-    rentalRequired: false,
-  },
-  {
-    woid: '884055',
-    insured: 'David Reyes',
-    address: '2901 W Thomas Rd',
-    city: 'Phoenix', state: 'AZ',
-    type: 'Cost of Construction',
-    carrier: 'Nationwide',
-    phone: '(623) 555-0887',
-    dueDate: '2026-04-14',
-    assignedDate: '2026-04-02',
-    status: 'Backlog',
-    priority: 'Medium',
-    assignedTo: 'ella',
-    replacementCost: null,
-    notes: '',
-    rentalRequired: false,
-  },
-  {
-    woid: '883901',
-    insured: 'Sandra Mills',
-    address: '1820 W Gurley St',
-    city: 'Prescott', state: 'AZ',
-    type: 'Interior High Value',
-    carrier: 'Auto-Owners',
-    phone: '(928) 555-0214',
-    dueDate: '2026-04-18',
-    assignedDate: '2026-04-04',
-    status: 'Backlog',
-    priority: 'Low',
-    assignedTo: 'ella',
-    replacementCost: null,
-    notes: '',
-    rentalRequired: true,
-  },
-  {
-    woid: '884312',
-    insured: 'James Tran',
-    address: '9620 E Thompson Peak Pkwy',
-    city: 'Scottsdale', state: 'AZ',
-    type: 'Interior Standard',
-    carrier: 'USAA',
-    phone: '(480) 555-0993',
-    dueDate: '2026-04-09',
-    assignedDate: '2026-03-12',
-    status: 'Review',
-    priority: 'Critical',
-    assignedTo: 'ella',
-    replacementCost: null,
-    notes: 'Urgent — past due soon',
-    rentalRequired: false,
-  },
-]
+import { useState, useCallback, useEffect } from 'react'
 
 export const STATUS_STYLES = {
   Backlog:    { label: 'Backlog',      cls: 'text-nexa-muted'  },
@@ -108,9 +20,45 @@ export function daysAssigned(assignedDate) {
   return Math.floor(diff / (1000 * 60 * 60 * 24))
 }
 
+// Map raw status strings from the sheet to internal status keys
+function normalizeStatus(raw) {
+  const s = (raw || '').toLowerCase().trim()
+  if (s.includes('progress') || s === 'active' || s === 'open') return 'InProgress'
+  if (s.includes('review') || s === 'pending review')           return 'Review'
+  if (s === 'done' || s === 'complete' || s === 'completed')     return 'Done'
+  return 'Backlog'
+}
+
 export function useInspections() {
-  const [inspections, setInspections] = useState(MOCK_INSPECTIONS)
+  const [inspections, setInspections] = useState([])
   const [filter, setFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await fetch('/api/os/inspections')
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        if (!cancelled) {
+          setInspections(
+            (data.inspections || []).map(r => ({
+              ...r,
+              status: normalizeStatus(r.status),
+            }))
+          )
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
 
   const filtered = filter === 'all'
     ? inspections
@@ -140,6 +88,7 @@ export function useInspections() {
     inspections: filtered,
     allInspections: inspections,
     filter, setFilter, counts,
+    loading, error,
     STATUS_STYLES, PRIORITY_STYLES,
     approveInspection, holdInspection,
   }

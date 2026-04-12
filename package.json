@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "node dev-api.js",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "googleapis": "^171.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
